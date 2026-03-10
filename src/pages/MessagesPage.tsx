@@ -57,7 +57,7 @@ export default function MessagesPage() {
           .from("profiles")
           .select("display_name")
           .eq("user_id", otherId)
-          .single();
+          .maybeSingle();
         convos.push({
           ...c,
           other_name: profile?.display_name || "Пользователь",
