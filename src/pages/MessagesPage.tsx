@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-import { Send, ArrowLeft } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Send, ArrowLeft, User } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -15,6 +16,8 @@ interface Conversation {
   listing_id: string | null;
   updated_at: string;
   other_name: string;
+  other_id: string;
+  last_message: string | null;
 }
 
 interface Message {
@@ -32,6 +35,7 @@ export default function MessagesPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Load conversations
@@ -46,21 +50,22 @@ export default function MessagesPage() {
 
       if (error) {
         toast({ title: "Ошибка загрузки чатов", variant: "destructive" });
+        setLoading(false);
         return;
       }
 
-      // Fetch other participant names
       const convos: Conversation[] = [];
       for (const c of data || []) {
         const otherId = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("user_id", otherId)
-          .maybeSingle();
+        const [{ data: profile }, { data: lastMsg }] = await Promise.all([
+          supabase.from("profiles").select("display_name").eq("user_id", otherId).maybeSingle(),
+          supabase.from("messages").select("content").eq("conversation_id", c.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+        ]);
         convos.push({
           ...c,
           other_name: profile?.display_name || "Пользователь",
+          other_id: otherId,
+          last_message: lastMsg?.content || null,
         });
       }
       setConversations(convos);
@@ -71,20 +76,25 @@ export default function MessagesPage() {
 
   // Load messages for selected conversation
   useEffect(() => {
-    if (!selectedConvo) return;
+    if (!selectedConvo) {
+      setMessages([]);
+      return;
+    }
+
+    let cancelled = false;
+
     const fetchMessages = async () => {
       const { data } = await supabase
         .from("messages")
         .select("*")
         .eq("conversation_id", selectedConvo)
         .order("created_at", { ascending: true });
-      setMessages(data || []);
+      if (!cancelled) setMessages(data || []);
     };
     fetchMessages();
 
-    // Subscribe to new messages
     const channel = supabase
-      .channel(`messages-${selectedConvo}`)
+      .channel(`conversation:${selectedConvo}`)
       .on(
         "postgres_changes",
         {
@@ -94,12 +104,20 @@ export default function MessagesPage() {
           filter: `conversation_id=eq.${selectedConvo}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          if (!cancelled) {
+            const newMsg = payload.new as Message;
+            setMessages((prev) => {
+              // Avoid duplicates
+              if (prev.some((m) => m.id === newMsg.id)) return prev;
+              return [...prev, newMsg];
+            });
+          }
         }
       )
       .subscribe();
 
     return () => {
+      cancelled = true;
       supabase.removeChannel(channel);
     };
   }, [selectedConvo]);
@@ -111,24 +129,36 @@ export default function MessagesPage() {
     }
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !user || !selectedConvo) return;
+  const sendMessage = useCallback(async () => {
+    if (!newMessage.trim() || !user || !selectedConvo || sending) return;
+    setSending(true);
+    const content = newMessage.trim();
+    setNewMessage("");
+
     const { error } = await supabase.from("messages").insert({
-      content: newMessage.trim(),
+      content,
       conversation_id: selectedConvo,
       sender_id: user.id,
     });
+
     if (error) {
       toast({ title: "Не удалось отправить", variant: "destructive" });
+      setNewMessage(content); // restore
     } else {
-      setNewMessage("");
-      // Update conversation timestamp
       await supabase
         .from("conversations")
         .update({ updated_at: new Date().toISOString() })
         .eq("id", selectedConvo);
+
+      // Update last message in conversation list
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === selectedConvo ? { ...c, last_message: content, updated_at: new Date().toISOString() } : c
+        )
+      );
     }
-  };
+    setSending(false);
+  }, [newMessage, user, selectedConvo, sending]);
 
   const selectedConversation = conversations.find((c) => c.id === selectedConvo);
 
@@ -167,7 +197,10 @@ export default function MessagesPage() {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <span className="font-semibold text-sm">{convo.other_name}</span>
-                    <p className="text-xs text-muted-foreground">
+                    {convo.last_message && (
+                      <p className="text-xs text-muted-foreground truncate">{convo.last_message}</p>
+                    )}
+                    <p className="text-[10px] text-muted-foreground">
                       {new Date(convo.updated_at).toLocaleDateString("ru-RU")}
                     </p>
                   </div>
@@ -184,15 +217,23 @@ export default function MessagesPage() {
               <button onClick={() => setSelectedConvo(null)} className="md:hidden text-sm text-primary">
                 <ArrowLeft className="h-4 w-4" />
               </button>
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                  {selectedConversation?.other_name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <span className="font-semibold text-sm">{selectedConversation?.other_name}</span>
+              <Link to={`/user/${selectedConversation?.other_id}`} className="flex items-center gap-3 flex-1 hover:opacity-80 transition-opacity">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                    {selectedConversation?.other_name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <span className="font-semibold text-sm">{selectedConversation?.other_name}</span>
+                  <p className="text-[10px] text-muted-foreground">Нажмите для просмотра профиля</p>
+                </div>
+              </Link>
             </div>
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
               <div className="space-y-3">
+                {messages.length === 0 && (
+                  <p className="text-center text-sm text-muted-foreground py-8">Начните общение — напишите первое сообщение</p>
+                )}
                 {messages.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.sender_id === user?.id ? "justify-end" : "justify-start"}`}>
                     <div
@@ -221,9 +262,9 @@ export default function MessagesPage() {
                 className="flex-1 rounded-full"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
               />
-              <Button size="icon" className="rounded-full h-10 w-10" onClick={sendMessage}>
+              <Button size="icon" className="rounded-full h-10 w-10" onClick={sendMessage} disabled={sending || !newMessage.trim()}>
                 <Send className="h-4 w-4" />
               </Button>
             </div>
