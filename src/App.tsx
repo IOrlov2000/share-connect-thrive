@@ -48,6 +48,7 @@ const App = () => (
               <Route path="/profile/support" element={<RequireAuth><SupportPage /></RequireAuth>} />
               <Route path="/charity" element={<CharityPage />} />
               <Route path="/listing/:id" element={<ListingDetailPage />} />
+              <Route path="/user/:userId" element={<UserProfilePage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AppLayout>
