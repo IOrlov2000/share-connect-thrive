@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import ListingCard from "@/components/ListingCard";
 import CategoryCard from "@/components/CategoryCard";
+import YandexMap from "@/components/YandexMap";
 import { supabase } from "@/integrations/supabase/client";
 
 const categoryIcons = [
