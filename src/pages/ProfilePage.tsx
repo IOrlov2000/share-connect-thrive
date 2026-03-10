@@ -32,7 +32,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("*").eq("user_id", user.id).single().then(({ data }) => {
+    supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle().then(({ data }) => {
       if (data) setProfile(data);
     });
     supabase.from("listings").select("id", { count: "exact", head: true }).eq("user_id", user.id).then(({ count }) => {
