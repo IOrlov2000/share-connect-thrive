@@ -6,18 +6,18 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const conversations = [
-  { id: "1", name: "Sarah M.", lastMessage: "Is the MacBook still available?", time: "2m ago", unread: true },
-  { id: "2", name: "James K.", lastMessage: "Can you do $100 for the jacket?", time: "1h ago", unread: false },
-  { id: "3", name: "Maria L.", lastMessage: "I can pick up tomorrow!", time: "3h ago", unread: true },
-  { id: "4", name: "David W.", lastMessage: "Thanks for the trade!", time: "1d ago", unread: false },
+  { id: "1", name: "Анна М.", lastMessage: "MacBook ещё доступен?", time: "2 мин", unread: true },
+  { id: "2", name: "Дмитрий К.", lastMessage: "За куртку 10 000 отдадите?", time: "1 ч", unread: false },
+  { id: "3", name: "Мария Л.", lastMessage: "Могу забрать завтра!", time: "3 ч", unread: true },
+  { id: "4", name: "Алексей В.", lastMessage: "Спасибо за обмен!", time: "1 д", unread: false },
 ];
 
 const messages = [
-  { id: "1", sender: "them", text: "Hi! Is the MacBook still available?", time: "2:30 PM" },
-  { id: "2", sender: "me", text: "Yes it is! Are you interested?", time: "2:32 PM" },
-  { id: "3", sender: "them", text: "Absolutely! What condition is it in?", time: "2:33 PM" },
-  { id: "4", sender: "me", text: "Like new, only used for 3 months. Comes with original box and charger.", time: "2:35 PM" },
-  { id: "5", sender: "them", text: "That sounds great! Can we meet in Brooklyn?", time: "2:36 PM" },
+  { id: "1", sender: "them", text: "Привет! MacBook ещё доступен?", time: "14:30" },
+  { id: "2", sender: "me", text: "Да, конечно! Интересует?", time: "14:32" },
+  { id: "3", sender: "them", text: "Очень! В каком состоянии?", time: "14:33" },
+  { id: "4", sender: "me", text: "Как новый, использовал всего 3 месяца. В комплекте оригинальная коробка и зарядка.", time: "14:35" },
+  { id: "5", sender: "them", text: "Отлично! Можем встретиться в центре?", time: "14:36" },
 ];
 
 export default function MessagesPage() {
@@ -25,9 +25,8 @@ export default function MessagesPage() {
 
   return (
     <div className="container py-6 animate-fade-in">
-      <h1 className="font-display text-2xl font-bold mb-4">Messages</h1>
+      <h1 className="font-display text-2xl font-bold mb-4">Сообщения</h1>
       <div className="flex h-[calc(100vh-220px)] md:h-[calc(100vh-160px)] overflow-hidden rounded-xl border bg-card">
-        {/* Conversation List */}
         <div className={`w-full border-r md:w-80 ${selectedConvo ? "hidden md:block" : ""}`}>
           <ScrollArea className="h-full">
             {conversations.map((convo) => (
@@ -56,15 +55,14 @@ export default function MessagesPage() {
           </ScrollArea>
         </div>
 
-        {/* Chat Area */}
         {selectedConvo ? (
           <div className="flex flex-1 flex-col">
             <div className="flex items-center gap-3 border-b p-4">
-              <button onClick={() => setSelectedConvo(null)} className="md:hidden text-sm text-primary">← Back</button>
+              <button onClick={() => setSelectedConvo(null)} className="md:hidden text-sm text-primary">← Назад</button>
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">S</AvatarFallback>
+                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">А</AvatarFallback>
               </Avatar>
-              <span className="font-semibold text-sm">Sarah M.</span>
+              <span className="font-semibold text-sm">Анна М.</span>
             </div>
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-3">
@@ -87,7 +85,7 @@ export default function MessagesPage() {
               </div>
             </ScrollArea>
             <div className="flex items-center gap-2 border-t p-4">
-              <Input placeholder="Type a message..." className="flex-1 rounded-full" />
+              <Input placeholder="Написать сообщение..." className="flex-1 rounded-full" />
               <Button size="icon" className="rounded-full h-10 w-10">
                 <Send className="h-4 w-4" />
               </Button>
@@ -95,7 +93,7 @@ export default function MessagesPage() {
           </div>
         ) : (
           <div className="hidden md:flex flex-1 items-center justify-center text-muted-foreground">
-            Select a conversation to start chatting
+            Выберите диалог, чтобы начать общение
           </div>
         )}
       </div>

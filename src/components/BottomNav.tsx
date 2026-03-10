@@ -2,12 +2,12 @@ import { Link, useLocation } from "react-router-dom";
 import { Home, Search, PlusCircle, MessageCircle, User, Heart } from "lucide-react";
 
 const navItems = [
-  { to: "/", icon: Home, label: "Home" },
-  { to: "/browse", icon: Search, label: "Browse" },
-  { to: "/create", icon: PlusCircle, label: "Sell" },
-  { to: "/charity", icon: Heart, label: "Charity" },
-  { to: "/messages", icon: MessageCircle, label: "Chat" },
-  { to: "/profile", icon: User, label: "Profile" },
+  { to: "/", icon: Home, label: "Главная" },
+  { to: "/browse", icon: Search, label: "Каталог" },
+  { to: "/create", icon: PlusCircle, label: "Создать" },
+  { to: "/charity", icon: Heart, label: "Помощь" },
+  { to: "/messages", icon: MessageCircle, label: "Чат" },
+  { to: "/profile", icon: User, label: "Профиль" },
 ];
 
 export default function BottomNav() {
