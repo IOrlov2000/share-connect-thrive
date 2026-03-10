@@ -1,30 +1,65 @@
+import { useState, useEffect } from "react";
 import { Search, Laptop, Shirt, Sofa, Bike, BookOpen, Gamepad2, Baby, Wrench } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import ListingCard from "@/components/ListingCard";
 import CategoryCard from "@/components/CategoryCard";
+import { supabase } from "@/integrations/supabase/client";
 
-const categories = [
-  { name: "Электроника", icon: Laptop, count: 234, color: "bg-accent text-accent-foreground" },
-  { name: "Одежда", icon: Shirt, count: 189, color: "bg-accent text-accent-foreground" },
-  { name: "Мебель", icon: Sofa, count: 97, color: "bg-accent text-accent-foreground" },
-  { name: "Спорт", icon: Bike, count: 156, color: "bg-accent text-accent-foreground" },
-  { name: "Книги", icon: BookOpen, count: 312, color: "bg-accent text-accent-foreground" },
-  { name: "Игры", icon: Gamepad2, count: 78, color: "bg-accent text-accent-foreground" },
-  { name: "Детское", icon: Baby, count: 145, color: "bg-accent text-accent-foreground" },
-  { name: "Инструменты", icon: Wrench, count: 63, color: "bg-accent text-accent-foreground" },
+const categoryIcons = [
+  { name: "Электроника", icon: Laptop },
+  { name: "Одежда", icon: Shirt },
+  { name: "Мебель", icon: Sofa },
+  { name: "Спорт", icon: Bike },
+  { name: "Книги", icon: BookOpen },
+  { name: "Игры", icon: Gamepad2 },
+  { name: "Детское", icon: Baby },
+  { name: "Инструменты", icon: Wrench },
 ];
 
-const featuredListings = [
-  { id: "1", title: "MacBook Pro 2023 — как новый", image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop", price: "89 000 ₽", location: "Москва", category: "Электроника" },
-  { id: "2", title: "Винтажная кожаная куртка", image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=400&fit=crop", price: "12 000 ₽", location: "Москва", category: "Одежда" },
-  { id: "3", title: "Кресло в стиле mid-century", image: "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400&h=400&fit=crop", price: "25 000 ₽", location: "Санкт-Петербург", category: "Мебель" },
-  { id: "4", title: "Горный велосипед Trek", image: "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=400&h=400&fit=crop", price: "45 000 ₽", location: "Казань", category: "Спорт" },
-  { id: "5", title: "Nintendo Switch комплект", image: "https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?w=400&h=400&fit=crop", price: "20 000 ₽", location: "Новосибирск", category: "Игры" },
-  { id: "6", title: "Коллекция детских книг", image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=400&fit=crop", price: "Бесплатно", location: "Екатеринбург", category: "Книги", isCharity: true },
-];
+interface DBListing {
+  id: string;
+  title: string;
+  images: string[] | null;
+  price: number | null;
+  location: string | null;
+  is_charity: boolean | null;
+  categories: { name: string } | null;
+}
 
 export default function HomePage() {
+  const [listings, setListings] = useState<DBListing[]>([]);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: listingsData } = await supabase
+        .from("listings")
+        .select("id, title, images, price, location, is_charity, categories(name)")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(8);
+
+      if (listingsData) setListings(listingsData as DBListing[]);
+
+      // Get category counts
+      const { data: allListings } = await supabase
+        .from("listings")
+        .select("category_id, categories(name)")
+        .eq("status", "active");
+
+      if (allListings) {
+        const counts: Record<string, number> = {};
+        allListings.forEach((l: any) => {
+          const name = l.categories?.name;
+          if (name) counts[name] = (counts[name] || 0) + 1;
+        });
+        setCategoryCounts(counts);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="container py-6 space-y-8">
       {/* Hero */}
@@ -45,23 +80,44 @@ export default function HomePage() {
       <section className="space-y-4">
         <h2 className="font-display text-xl font-semibold">Категории</h2>
         <div className="grid grid-cols-4 gap-3 md:grid-cols-8">
-          {categories.map((cat) => (
-            <CategoryCard key={cat.name} {...cat} />
+          {categoryIcons.map((cat) => (
+            <CategoryCard
+              key={cat.name}
+              name={cat.name}
+              icon={cat.icon}
+              count={categoryCounts[cat.name] || 0}
+              color="bg-accent text-accent-foreground"
+            />
           ))}
         </div>
       </section>
 
-      {/* Featured Listings */}
+      {/* Listings from DB */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-xl font-semibold">Популярные объявления</h2>
+          <h2 className="font-display text-xl font-semibold">Последние объявления</h2>
           <Link to="/browse" className="text-sm text-primary font-medium hover:underline">Смотреть все →</Link>
         </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {featuredListings.map((listing) => (
-            <ListingCard key={listing.id} {...listing} />
-          ))}
-        </div>
+        {listings.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {listings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                id={listing.id}
+                title={listing.title}
+                image={listing.images?.[0] || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=400&fit=crop"}
+                price={listing.is_charity ? "Бесплатно" : listing.price ? `${listing.price.toLocaleString()} ₽` : "Договорная"}
+                location={listing.location || "Не указано"}
+                category={(listing.categories as any)?.name || "Другое"}
+                isCharity={listing.is_charity || false}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="py-12 text-center text-muted-foreground">
+            Пока нет объявлений. <Link to="/create" className="text-primary hover:underline">Создайте первое!</Link>
+          </div>
+        )}
       </section>
     </div>
   );
