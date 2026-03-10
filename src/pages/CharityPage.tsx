@@ -1,4 +1,5 @@
 import { Heart, Building2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import ListingCard from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
 
