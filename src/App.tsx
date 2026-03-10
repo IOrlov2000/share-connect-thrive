@@ -15,7 +15,8 @@ import ListingDetailPage from "@/pages/ListingDetailPage";
 import MyListingsPage from "@/pages/MyListingsPage";
 import MyOffersPage from "@/pages/MyOffersPage";
 import FavoritesPage from "@/pages/FavoritesPage";
-import MyRequestsPage from "@/pages/MyRequestsPage";
+import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
+import SupportPage from "@/pages/SupportPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
