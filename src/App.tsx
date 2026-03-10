@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import RequireAuth from "@/components/RequireAuth";
 import AppLayout from "@/components/AppLayout";
 import HomePage from "@/pages/HomePage";
 import AuthPage from "@/pages/AuthPage";
@@ -35,15 +36,15 @@ const App = () => (
               <Route path="/" element={<HomePage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/browse" element={<BrowsePage />} />
-              <Route path="/create" element={<CreateListingPage />} />
-              <Route path="/messages" element={<MessagesPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/profile/listings" element={<MyListingsPage />} />
-              <Route path="/profile/offers" element={<MyOffersPage />} />
-              <Route path="/profile/favorites" element={<FavoritesPage />} />
-              <Route path="/profile/requests" element={<MyRequestsPage />} />
-              <Route path="/profile/settings" element={<ProfileSettingsPage />} />
-              <Route path="/profile/support" element={<SupportPage />} />
+              <Route path="/create" element={<RequireAuth><CreateListingPage /></RequireAuth>} />
+              <Route path="/messages" element={<RequireAuth><MessagesPage /></RequireAuth>} />
+              <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+              <Route path="/profile/listings" element={<RequireAuth><MyListingsPage /></RequireAuth>} />
+              <Route path="/profile/offers" element={<RequireAuth><MyOffersPage /></RequireAuth>} />
+              <Route path="/profile/favorites" element={<RequireAuth><FavoritesPage /></RequireAuth>} />
+              <Route path="/profile/requests" element={<RequireAuth><MyRequestsPage /></RequireAuth>} />
+              <Route path="/profile/settings" element={<RequireAuth><ProfileSettingsPage /></RequireAuth>} />
+              <Route path="/profile/support" element={<RequireAuth><SupportPage /></RequireAuth>} />
               <Route path="/charity" element={<CharityPage />} />
               <Route path="/listing/:id" element={<ListingDetailPage />} />
               <Route path="*" element={<NotFound />} />
