@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Phone, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
 
 export default function AuthPage() {
-  const [phone, setPhone] = useState("+7");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,17 +20,9 @@ export default function AuthPage() {
     if (user) navigate("/", { replace: true });
   }, [user, navigate]);
 
-  const formatPhone = (value: string) => {
-    // Keep only digits and leading +
-    let cleaned = value.replace(/[^\d+]/g, "");
-    if (!cleaned.startsWith("+")) cleaned = "+" + cleaned;
-    return cleaned;
-  };
-
   const handleAuth = async () => {
-    const trimmedPhone = phone.trim();
-    if (trimmedPhone.length < 11) {
-      toast({ title: "Введите корректный номер телефона", variant: "destructive" });
+    if (!email.trim()) {
+      toast({ title: "Введите email", variant: "destructive" });
       return;
     }
     if (password.length < 6) {
@@ -42,32 +34,24 @@ export default function AuthPage() {
 
     if (isSignUp) {
       const { error } = await supabase.auth.signUp({
-        phone: trimmedPhone,
+        email: email.trim(),
         password,
       });
       setLoading(false);
       if (error) {
-        if (error.message.includes("already registered")) {
-          toast({ title: "Этот номер уже зарегистрирован", description: "Попробуйте войти", variant: "destructive" });
-        } else {
-          toast({ title: "Ошибка регистрации", description: error.message, variant: "destructive" });
-        }
+        toast({ title: "Ошибка регистрации", description: error.message, variant: "destructive" });
       } else {
         toast({ title: "Добро пожаловать!" });
         navigate("/", { replace: true });
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({
-        phone: trimmedPhone,
+        email: email.trim(),
         password,
       });
       setLoading(false);
       if (error) {
-        if (error.message.includes("Invalid login")) {
-          toast({ title: "Неверный номер или пароль", variant: "destructive" });
-        } else {
-          toast({ title: "Ошибка входа", description: error.message, variant: "destructive" });
-        }
+        toast({ title: "Неверный email или пароль", variant: "destructive" });
       } else {
         navigate("/", { replace: true });
       }
@@ -86,12 +70,12 @@ export default function AuthPage() {
 
         <div className="space-y-4">
           <div className="relative">
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              type="tel"
-              placeholder="+7 999 123 45 67"
-              value={phone}
-              onChange={(e) => setPhone(formatPhone(e.target.value))}
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="pl-10 h-12"
             />
           </div>
