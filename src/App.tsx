@@ -11,6 +11,7 @@ import CreateListingPage from "@/pages/CreateListingPage";
 import MessagesPage from "@/pages/MessagesPage";
 import ProfilePage from "@/pages/ProfilePage";
 import CharityPage from "@/pages/CharityPage";
+import ListingDetailPage from "@/pages/ListingDetailPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/charity" element={<CharityPage />} />
+            <Route path="/listing/:id" element={<ListingDetailPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>

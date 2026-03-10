@@ -12,9 +12,9 @@ export default function AuthPage() {
     <div className="flex min-h-[80vh] items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-8 animate-fade-in">
         <div className="text-center space-y-2">
-          <h1 className="font-display text-3xl font-bold text-gradient">SwapSpot</h1>
+          <h1 className="font-display text-3xl font-bold text-gradient">Всё на Всё</h1>
           <p className="text-muted-foreground">
-            {step === "phone" ? "Enter your phone number to get started" : "Enter the code we sent you"}
+            {step === "phone" ? "Введите номер телефона для входа" : "Введите код, который мы отправили"}
           </p>
         </div>
 
@@ -24,14 +24,14 @@ export default function AuthPage() {
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="tel"
-                placeholder="+1 (555) 000-0000"
+                placeholder="+7 (999) 000-00-00"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="pl-10 h-12"
               />
             </div>
             <Button className="w-full h-12" onClick={() => setStep("otp")}>
-              Continue <ArrowRight className="ml-2 h-4 w-4" />
+              Продолжить <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         ) : (
@@ -49,13 +49,13 @@ export default function AuthPage() {
               </InputOTP>
             </div>
             <Button className="w-full h-12">
-              Verify & Sign In
+              Подтвердить и войти
             </Button>
             <button
               onClick={() => setStep("phone")}
               className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              ← Back to phone number
+              ← Назад к номеру телефона
             </button>
           </div>
         )}

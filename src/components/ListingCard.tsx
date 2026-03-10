@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { MapPin } from "lucide-react";
 
 interface ListingCardProps {
@@ -10,14 +11,14 @@ interface ListingCardProps {
   isCharity?: boolean;
 }
 
-export default function ListingCard({ title, image, price, location, category, isCharity }: ListingCardProps) {
+export default function ListingCard({ id, title, image, price, location, category, isCharity }: ListingCardProps) {
   return (
-    <div className="group animate-fade-in cursor-pointer overflow-hidden rounded-xl border bg-card transition-all hover:shadow-lg hover:-translate-y-1">
+    <Link to={`/listing/${id}`} className="group animate-fade-in cursor-pointer overflow-hidden rounded-xl border bg-card transition-all hover:shadow-lg hover:-translate-y-1 block">
       <div className="relative aspect-square overflow-hidden">
-        <img src={image} alt={title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+        <img src={image} alt={title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
         {isCharity && (
           <span className="absolute top-2 left-2 rounded-full bg-charity px-2.5 py-0.5 text-xs font-medium text-charity-foreground">
-            Charity
+            Благотворительность
           </span>
         )}
         <span className="absolute top-2 right-2 rounded-full bg-card/90 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
@@ -32,6 +33,6 @@ export default function ListingCard({ title, image, price, location, category, i
           <span>{location}</span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

@@ -1,12 +1,15 @@
-import { Settings, MapPin, Star, Package } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Settings, MapPin, Star, Package, Heart, FileText, ArrowRightLeft, ClipboardList, Headphones, LogOut, Trash2, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ListingCard from "@/components/ListingCard";
+import { Separator } from "@/components/ui/separator";
 
-const myListings = [
-  { id: "1", title: "MacBook Pro 2023", image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop", price: "$899", location: "Brooklyn, NY", category: "Electronics" },
-  { id: "2", title: "Vintage Leather Jacket", image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=400&fit=crop", price: "$120", location: "Brooklyn, NY", category: "Clothing" },
+const menuItems = [
+  { to: "/profile/listings", icon: FileText, label: "Мои объявления" },
+  { to: "/profile/offers", icon: ArrowRightLeft, label: "Мои предложения" },
+  { to: "/profile/favorites", icon: Heart, label: "Избранное" },
+  { to: "/profile/requests", icon: ClipboardList, label: "Мои заявки" },
+  { to: "/profile/settings", icon: Settings, label: "Настройки профиля" },
+  { to: "/profile/support", icon: Headphones, label: "Служба поддержки" },
 ];
 
 export default function ProfilePage() {
@@ -15,29 +18,26 @@ export default function ProfilePage() {
       {/* Profile Header */}
       <div className="flex items-center gap-4">
         <Avatar className="h-20 w-20">
-          <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-display font-bold">JS</AvatarFallback>
+          <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-display font-bold">ИП</AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <h1 className="font-display text-xl font-bold">John Smith</h1>
+          <h1 className="font-display text-xl font-bold">Иван Петров</h1>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5" /> Brooklyn, NY
+            <MapPin className="h-3.5 w-3.5" /> Москва
           </div>
           <div className="flex items-center gap-3 mt-1">
             <span className="flex items-center gap-1 text-sm"><Star className="h-3.5 w-3.5 fill-secondary text-secondary" /> 4.8</span>
-            <span className="text-sm text-muted-foreground">• 23 trades</span>
+            <span className="text-sm text-muted-foreground">• 23 обмена</span>
           </div>
         </div>
-        <Button variant="outline" size="icon">
-          <Settings className="h-4 w-4" />
-        </Button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Listings", value: "12" },
-          { label: "Sold", value: "8" },
-          { label: "Donated", value: "3" },
+          { label: "Объявления", value: "12" },
+          { label: "Обмены", value: "8" },
+          { label: "Пожертвования", value: "3" },
         ].map((stat) => (
           <div key={stat.label} className="rounded-xl border bg-card p-4 text-center">
             <p className="text-2xl font-bold font-display">{stat.value}</p>
@@ -46,33 +46,34 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="listings">
-        <TabsList className="w-full">
-          <TabsTrigger value="listings" className="flex-1">My Listings</TabsTrigger>
-          <TabsTrigger value="favorites" className="flex-1">Favorites</TabsTrigger>
-          <TabsTrigger value="history" className="flex-1">History</TabsTrigger>
-        </TabsList>
-        <TabsContent value="listings" className="mt-4">
-          <div className="grid grid-cols-2 gap-4">
-            {myListings.map((listing) => (
-              <ListingCard key={listing.id} {...listing} />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="favorites" className="mt-4">
-          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-            <Package className="h-10 w-10 mb-2" />
-            <p>No favorites yet</p>
-          </div>
-        </TabsContent>
-        <TabsContent value="history" className="mt-4">
-          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-            <Package className="h-10 w-10 mb-2" />
-            <p>No trade history yet</p>
-          </div>
-        </TabsContent>
-      </Tabs>
+      {/* Menu Items */}
+      <div className="rounded-xl border bg-card overflow-hidden">
+        {menuItems.map(({ to, icon: Icon, label }, index) => (
+          <Link
+            key={to}
+            to={to}
+            className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/50"
+          >
+            <Icon className="h-5 w-5 text-muted-foreground" />
+            <span className="flex-1 text-sm font-medium">{label}</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            {index < menuItems.length - 1 && <Separator className="absolute bottom-0 left-4 right-4" />}
+          </Link>
+        ))}
+      </div>
+
+      {/* Danger zone */}
+      <div className="rounded-xl border bg-card overflow-hidden">
+        <button className="flex w-full items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/50 text-left">
+          <LogOut className="h-5 w-5 text-muted-foreground" />
+          <span className="flex-1 text-sm font-medium">Выйти из аккаунта</span>
+        </button>
+        <Separator />
+        <button className="flex w-full items-center gap-3 px-4 py-3.5 transition-colors hover:bg-destructive/10 text-left">
+          <Trash2 className="h-5 w-5 text-destructive" />
+          <span className="flex-1 text-sm font-medium text-destructive">Удалить аккаунт</span>
+        </button>
+      </div>
     </div>
   );
 }

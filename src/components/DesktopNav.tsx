@@ -1,14 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, PlusCircle, MessageCircle, User, Heart, LogOut } from "lucide-react";
+import { Home, Search, PlusCircle, MessageCircle, User, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { to: "/", icon: Home, label: "Home" },
-  { to: "/browse", icon: Search, label: "Browse" },
-  { to: "/create", icon: PlusCircle, label: "Create Listing" },
-  { to: "/charity", icon: Heart, label: "Charity" },
-  { to: "/messages", icon: MessageCircle, label: "Messages" },
-  { to: "/profile", icon: User, label: "Profile" },
+  { to: "/", icon: Home, label: "Главная" },
+  { to: "/browse", icon: Search, label: "Каталог" },
+  { to: "/create", icon: PlusCircle, label: "Создать" },
+  { to: "/charity", icon: Heart, label: "Благотворительность" },
+  { to: "/messages", icon: MessageCircle, label: "Сообщения" },
+  { to: "/profile", icon: User, label: "Профиль" },
 ];
 
 export default function DesktopNav() {
@@ -18,7 +18,7 @@ export default function DesktopNav() {
     <header className="sticky top-0 z-50 hidden border-b bg-card/80 backdrop-blur-md md:block">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="font-display text-2xl font-bold text-gradient">
-          SwapSpot
+          Всё на Всё
         </Link>
         <nav className="flex items-center gap-1">
           {navItems.map(({ to, icon: Icon, label }) => {
@@ -38,7 +38,7 @@ export default function DesktopNav() {
           })}
         </nav>
         <Link to="/auth">
-          <Button size="sm">Sign In</Button>
+          <Button size="sm">Войти</Button>
         </Link>
       </div>
     </header>
