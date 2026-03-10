@@ -20,7 +20,8 @@ interface Category {
 export default function CreateListingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [isCharity, setIsCharity] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [isCharity, setIsCharity] = useState(searchParams.get("charity") === "true");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
