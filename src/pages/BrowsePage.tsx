@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -18,8 +19,14 @@ const allListings = [
 const categories = ["Все", "Электроника", "Одежда", "Мебель", "Спорт", "Игры", "Книги", "Детское", "Инструменты"];
 
 export default function BrowsePage() {
-  const [activeCategory, setActiveCategory] = useState("Все");
+  const [searchParams] = useSearchParams();
+  const categoryFromUrl = searchParams.get("category");
+  const [activeCategory, setActiveCategory] = useState(categoryFromUrl || "Все");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    if (categoryFromUrl) setActiveCategory(categoryFromUrl);
+  }, [categoryFromUrl]);
 
   const filtered = allListings.filter((l) => {
     const matchesCategory = activeCategory === "Все" || l.category === activeCategory;
