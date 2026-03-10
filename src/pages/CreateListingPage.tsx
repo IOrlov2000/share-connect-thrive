@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Camera, MapPin, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Camera, MapPin, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +17,12 @@ interface Category {
   name: string;
 }
 
+interface AddressSuggestion {
+  display_name: string;
+  lat: string;
+  lon: string;
+}
+
 export default function CreateListingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -27,10 +33,16 @@ export default function CreateListingPage() {
   const [categoryId, setCategoryId] = useState("");
   const [price, setPrice] = useState("");
   const [location, setLocation] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     supabase.from("categories").select("id, name").order("sort_order").then(({ data }) => {
@@ -47,6 +59,47 @@ export default function CreateListingPage() {
     const newImages = [...images, ...files].slice(0, 5);
     setImages(newImages);
     setPreviews(newImages.map((f) => URL.createObjectURL(f)));
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = images.filter((_, i) => i !== index);
+    const newPreviews = previews.filter((_, i) => i !== index);
+    setImages(newImages);
+    setPreviews(newPreviews);
+  };
+
+  const searchAddress = async (query: string) => {
+    if (query.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ru&limit=5&accept-language=ru`
+      );
+      const data = await res.json();
+      setSuggestions(data);
+      setShowSuggestions(true);
+    } catch {
+      setSuggestions([]);
+    }
+  };
+
+  const handleLocationChange = (value: string) => {
+    setLocation(value);
+    setLatitude(null);
+    setLongitude(null);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => searchAddress(value), 400);
+  };
+
+  const selectSuggestion = (s: AddressSuggestion) => {
+    setLocation(s.display_name);
+    setLatitude(parseFloat(s.lat));
+    setLongitude(parseFloat(s.lon));
+    setShowSuggestions(false);
+    setSuggestions([]);
+    setShowMap(true);
   };
 
   const handleSubmit = async () => {
@@ -75,6 +128,8 @@ export default function CreateListingPage() {
       category_id: categoryId || null,
       price: isCharity ? 0 : price ? Number(price) : null,
       location: location.trim() || null,
+      latitude,
+      longitude,
       is_charity: isCharity,
       images: imageUrls,
       user_id: user.id,
@@ -84,7 +139,7 @@ export default function CreateListingPage() {
     if (error) {
       toast({ title: "Ошибка", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Объявление опубликовано!" });
+      toast({ title: "Объявление опубликовано! ✅" });
       navigate("/profile/listings");
     }
   };
@@ -99,6 +154,12 @@ export default function CreateListingPage() {
           {previews.map((src, i) => (
             <div key={i} className="relative aspect-square overflow-hidden rounded-xl border">
               <img src={src} alt="" className="h-full w-full object-cover" />
+              <button
+                onClick={() => removeImage(i)}
+                className="absolute top-1 right-1 rounded-full bg-black/60 p-0.5 text-white hover:bg-black/80"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
           ))}
           {previews.length < 5 && (
@@ -143,9 +204,54 @@ export default function CreateListingPage() {
       <div className="space-y-2">
         <Label>Местоположение</Label>
         <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Введите ваш город" className="pl-10 h-12" value={location} onChange={(e) => setLocation(e.target.value)} />
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+          <Input
+            placeholder="Начните вводить адрес..."
+            className="pl-10 h-12"
+            value={location}
+            onChange={(e) => handleLocationChange(e.target.value)}
+            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute z-20 mt-1 w-full rounded-xl border bg-popover shadow-lg max-h-60 overflow-y-auto">
+              {suggestions.map((s, i) => (
+                <button
+                  key={i}
+                  className="w-full px-4 py-3 text-left text-sm hover:bg-accent transition-colors flex items-start gap-2"
+                  onMouseDown={() => selectSuggestion(s)}
+                >
+                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <span className="line-clamp-2">{s.display_name}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+        {latitude && longitude && (
+          <div className="flex items-center gap-2 mt-2">
+            <button
+              onClick={() => setShowMap(!showMap)}
+              className="text-sm text-primary hover:underline"
+            >
+              {showMap ? "Скрыть карту" : "Показать на карте"}
+            </button>
+            <span className="text-xs text-muted-foreground">
+              ({latitude.toFixed(4)}, {longitude.toFixed(4)})
+            </span>
+          </div>
+        )}
+        {showMap && latitude && longitude && (
+          <div className="mt-2 rounded-xl overflow-hidden border">
+            <iframe
+              title="map-preview"
+              width="100%"
+              height="250"
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${longitude - 0.01},${latitude - 0.01},${longitude + 0.01},${latitude + 0.01}&layer=mapnik&marker=${latitude},${longitude}`}
+              className="rounded-xl"
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between rounded-xl border bg-charity/5 p-4">
