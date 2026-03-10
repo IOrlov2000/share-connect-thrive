@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import ListingCard from "@/components/ListingCard";
 import CategoryCard from "@/components/CategoryCard";
+import YandexMap from "@/components/YandexMap";
 import { supabase } from "@/integrations/supabase/client";
 
 const categoryIcons = [
@@ -24,6 +25,8 @@ interface DBListing {
   price: number | null;
   location: string | null;
   is_charity: boolean | null;
+  latitude: number | null;
+  longitude: number | null;
   categories: { name: string } | null;
 }
 
@@ -42,7 +45,7 @@ export default function HomePage() {
     const fetchData = async () => {
       const { data: listingsData } = await supabase
         .from("listings")
-        .select("id, title, images, price, location, is_charity, categories(name)")
+        .select("id, title, images, price, location, is_charity, latitude, longitude, categories(name)")
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(8);
@@ -51,7 +54,7 @@ export default function HomePage() {
 
       const { data: allListings } = await supabase
         .from("listings")
-        .select("category_id, categories(name)")
+        .select("category_id, categories(name), latitude, longitude")
         .eq("status", "active");
 
       if (allListings) {
@@ -185,6 +188,24 @@ export default function HomePage() {
             />
           ))}
         </div>
+      </section>
+
+      {/* Map */}
+      <section className="space-y-4">
+        <h2 className="font-display text-xl font-semibold">Объявления на карте</h2>
+        <YandexMap
+          listings={listings
+            .filter((l) => l.latitude && l.longitude)
+            .map((l) => ({
+              id: l.id,
+              title: l.title,
+              latitude: l.latitude!,
+              longitude: l.longitude!,
+              price: l.price,
+              is_charity: l.is_charity || false,
+              image: l.images?.[0],
+            }))}
+        />
       </section>
 
       {/* Listings from DB */}
