@@ -20,6 +20,7 @@ import FavoritesPage from "@/pages/FavoritesPage";
 import MyRequestsPage from "@/pages/MyRequestsPage";
 import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
 import SupportPage from "@/pages/SupportPage";
+import UserProfilePage from "@/pages/UserProfilePage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
