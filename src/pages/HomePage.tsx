@@ -54,7 +54,7 @@ export default function HomePage() {
 
       const { data: allListings } = await supabase
         .from("listings")
-        .select("category_id, categories(name)")
+        .select("category_id, categories(name), latitude, longitude")
         .eq("status", "active");
 
       if (allListings) {
