@@ -47,7 +47,7 @@ const App = () => (
             <Route path="/listing/:id" element={<ListingDetailPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </AppLayout>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
