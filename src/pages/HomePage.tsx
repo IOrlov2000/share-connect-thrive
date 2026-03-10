@@ -25,6 +25,8 @@ interface DBListing {
   price: number | null;
   location: string | null;
   is_charity: boolean | null;
+  latitude: number | null;
+  longitude: number | null;
   categories: { name: string } | null;
 }
 
