@@ -35,14 +35,14 @@ export default function ProfilePage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Объявления", value: "12" },
-          { label: "Обмены", value: "8" },
-          { label: "Пожертвования", value: "3" },
+          { label: "Объявления", value: "12", to: "/profile/listings" },
+          { label: "Обмены", value: "8", to: "/profile/offers" },
+          { label: "Пожертвования", value: "3", to: "/charity" },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-xl border bg-card p-4 text-center">
+          <Link key={stat.label} to={stat.to} className="rounded-xl border bg-card p-4 text-center hover:shadow-md transition-all hover:-translate-y-0.5">
             <p className="text-2xl font-bold font-display">{stat.value}</p>
             <p className="text-xs text-muted-foreground">{stat.label}</p>
-          </div>
+          </Link>
         ))}
       </div>
 
