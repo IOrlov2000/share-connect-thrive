@@ -20,6 +20,7 @@ import FavoritesPage from "@/pages/FavoritesPage";
 import MyRequestsPage from "@/pages/MyRequestsPage";
 import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
 import SupportPage from "@/pages/SupportPage";
+import UserProfilePage from "@/pages/UserProfilePage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/profile/support" element={<RequireAuth><SupportPage /></RequireAuth>} />
               <Route path="/charity" element={<CharityPage />} />
               <Route path="/listing/:id" element={<ListingDetailPage />} />
+              <Route path="/user/:userId" element={<UserProfilePage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AppLayout>
