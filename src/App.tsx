@@ -16,6 +16,8 @@ import MyListingsPage from "@/pages/MyListingsPage";
 import MyOffersPage from "@/pages/MyOffersPage";
 import FavoritesPage from "@/pages/FavoritesPage";
 import MyRequestsPage from "@/pages/MyRequestsPage";
+import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
+import SupportPage from "@/pages/SupportPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +40,8 @@ const App = () => (
             <Route path="/profile/offers" element={<MyOffersPage />} />
             <Route path="/profile/favorites" element={<FavoritesPage />} />
             <Route path="/profile/requests" element={<MyRequestsPage />} />
+            <Route path="/profile/settings" element={<ProfileSettingsPage />} />
+            <Route path="/profile/support" element={<SupportPage />} />
             <Route path="/charity" element={<CharityPage />} />
             <Route path="/listing/:id" element={<ListingDetailPage />} />
             <Route path="*" element={<NotFound />} />
