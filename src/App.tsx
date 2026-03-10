@@ -30,23 +30,25 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/browse" element={<BrowsePage />} />
-            <Route path="/create" element={<CreateListingPage />} />
-            <Route path="/messages" element={<MessagesPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/profile/listings" element={<MyListingsPage />} />
-            <Route path="/profile/offers" element={<MyOffersPage />} />
-            <Route path="/profile/favorites" element={<FavoritesPage />} />
-            <Route path="/profile/requests" element={<MyRequestsPage />} />
-            <Route path="/profile/settings" element={<ProfileSettingsPage />} />
-            <Route path="/profile/support" element={<SupportPage />} />
-            <Route path="/charity" element={<CharityPage />} />
-            <Route path="/listing/:id" element={<ListingDetailPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/browse" element={<BrowsePage />} />
+              <Route path="/create" element={<CreateListingPage />} />
+              <Route path="/messages" element={<MessagesPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile/listings" element={<MyListingsPage />} />
+              <Route path="/profile/offers" element={<MyOffersPage />} />
+              <Route path="/profile/favorites" element={<FavoritesPage />} />
+              <Route path="/profile/requests" element={<MyRequestsPage />} />
+              <Route path="/profile/settings" element={<ProfileSettingsPage />} />
+              <Route path="/profile/support" element={<SupportPage />} />
+              <Route path="/charity" element={<CharityPage />} />
+              <Route path="/listing/:id" element={<ListingDetailPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AppLayout>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
