@@ -45,7 +45,7 @@ export default function HomePage() {
     const fetchData = async () => {
       const { data: listingsData } = await supabase
         .from("listings")
-        .select("id, title, images, price, location, is_charity, categories(name)")
+        .select("id, title, images, price, location, is_charity, latitude, longitude, categories(name)")
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(8);
