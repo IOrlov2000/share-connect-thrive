@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,32 +18,53 @@ const allListings = [
 const categories = ["Все", "Электроника", "Одежда", "Мебель", "Спорт", "Игры", "Книги", "Детское", "Инструменты"];
 
 export default function BrowsePage() {
+  const [activeCategory, setActiveCategory] = useState("Все");
+  const [search, setSearch] = useState("");
+
+  const filtered = allListings.filter((l) => {
+    const matchesCategory = activeCategory === "Все" || l.category === activeCategory;
+    const matchesSearch = l.title.toLowerCase().includes(search.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
   return (
     <div className="container py-6 space-y-6 animate-fade-in">
       <h1 className="font-display text-2xl font-bold">Каталог объявлений</h1>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Поиск..." className="pl-10 h-12 rounded-full" />
+        <Input
+          placeholder="Поиск..."
+          className="pl-10 h-12 rounded-full"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {categories.map((cat) => (
           <Badge
             key={cat}
-            variant={cat === "Все" ? "default" : "outline"}
+            variant={activeCategory === cat ? "default" : "outline"}
             className="cursor-pointer whitespace-nowrap px-4 py-1.5 hover:bg-primary hover:text-primary-foreground transition-colors"
+            onClick={() => setActiveCategory(cat)}
           >
             {cat}
           </Badge>
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {allListings.map((listing) => (
-          <ListingCard key={listing.id} {...listing} />
-        ))}
-      </div>
+      {filtered.length > 0 ? (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {filtered.map((listing) => (
+            <ListingCard key={listing.id} {...listing} />
+          ))}
+        </div>
+      ) : (
+        <div className="py-12 text-center text-muted-foreground">
+          Ничего не найдено
+        </div>
+      )}
     </div>
   );
 }
