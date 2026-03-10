@@ -1,4 +1,5 @@
 import { Heart, Building2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import ListingCard from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +17,12 @@ const foundations = [
 ];
 
 export default function CharityPage() {
+  const navigate = useNavigate();
+
+  const handleDonate = () => {
+    navigate("/create?charity=true");
+  };
+
   return (
     <div className="container py-6 space-y-8 animate-fade-in">
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-charity/10 to-primary/10 p-8 text-center">
@@ -24,7 +31,7 @@ export default function CharityPage() {
         <p className="text-muted-foreground mt-2 max-w-md mx-auto">
           Пожертвуйте вещи в местные фонды и помогите нуждающимся. Каждая вещь имеет значение.
         </p>
-        <Button className="mt-4 bg-charity hover:bg-charity/90 text-charity-foreground">
+        <Button className="mt-4 bg-charity hover:bg-charity/90 text-charity-foreground" onClick={handleDonate}>
           Пожертвовать вещь
         </Button>
       </section>

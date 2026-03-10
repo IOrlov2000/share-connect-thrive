@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -19,7 +20,8 @@ interface Category {
 export default function CreateListingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [isCharity, setIsCharity] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [isCharity, setIsCharity] = useState(searchParams.get("charity") === "true");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
