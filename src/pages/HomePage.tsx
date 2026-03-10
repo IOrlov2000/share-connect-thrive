@@ -190,6 +190,24 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Map */}
+      <section className="space-y-4">
+        <h2 className="font-display text-xl font-semibold">Объявления на карте</h2>
+        <YandexMap
+          listings={listings
+            .filter((l) => l.latitude && l.longitude)
+            .map((l) => ({
+              id: l.id,
+              title: l.title,
+              latitude: l.latitude!,
+              longitude: l.longitude!,
+              price: l.price,
+              is_charity: l.is_charity || false,
+              image: l.images?.[0],
+            }))}
+        />
+      </section>
+
       {/* Listings from DB */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
