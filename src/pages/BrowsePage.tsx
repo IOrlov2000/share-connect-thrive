@@ -26,8 +26,9 @@ const categoryLabels = ["Все", "Электроника", "Одежда", "М�
 export default function BrowsePage() {
   const [searchParams] = useSearchParams();
   const categoryFromUrl = searchParams.get("category");
+  const searchFromUrl = searchParams.get("search") || "";
   const [activeCategory, setActiveCategory] = useState(categoryFromUrl || "Все");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchFromUrl);
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [showMap, setShowMap] = useState(false);
@@ -35,6 +36,10 @@ export default function BrowsePage() {
   useEffect(() => {
     if (categoryFromUrl) setActiveCategory(categoryFromUrl);
   }, [categoryFromUrl]);
+
+  useEffect(() => {
+    if (searchFromUrl) setSearch(searchFromUrl);
+  }, [searchFromUrl]);
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -59,7 +64,7 @@ export default function BrowsePage() {
 
   const filtered = listings.filter((l) => {
     const matchesCategory = activeCategory === "Все" || l.category_name === activeCategory;
-    const matchesSearch = l.title.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = !search.trim() || l.title.toLowerCase().includes(search.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
