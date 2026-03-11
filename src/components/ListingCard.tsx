@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { MapPin } from "lucide-react";
 
@@ -12,10 +13,22 @@ interface ListingCardProps {
 }
 
 export default function ListingCard({ id, title, image, price, location, category, isCharity }: ListingCardProps) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+
   return (
     <Link to={`/listing/${id}`} className="group animate-fade-in cursor-pointer overflow-hidden rounded-xl border bg-card transition-all hover:shadow-lg hover:-translate-y-1 block">
-      <div className="relative aspect-square overflow-hidden">
-        <img src={image} alt={title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" decoding="async" fetchPriority="low" />
+      <div className="relative aspect-square overflow-hidden bg-muted">
+        {!imgLoaded && (
+          <div className="absolute inset-0 animate-pulse bg-muted" />
+        )}
+        <img
+          src={image}
+          alt={title}
+          className={`h-full w-full object-cover transition-all duration-300 group-hover:scale-105 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+          loading="lazy"
+          decoding="async"
+          onLoad={() => setImgLoaded(true)}
+        />
         {isCharity && (
           <span className="absolute top-2 left-2 rounded-full bg-charity px-2.5 py-0.5 text-xs font-medium text-charity-foreground">
             Благотворительность
@@ -34,5 +47,18 @@ export default function ListingCard({ id, title, image, price, location, categor
         </div>
       </div>
     </Link>
+  );
+}
+
+export function ListingCardSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-xl border bg-card">
+      <div className="aspect-square bg-muted animate-pulse" />
+      <div className="p-3 space-y-2">
+        <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
+        <div className="h-5 w-1/2 bg-muted animate-pulse rounded" />
+        <div className="h-3 w-2/3 bg-muted animate-pulse rounded" />
+      </div>
+    </div>
   );
 }

@@ -3,7 +3,7 @@ import { Search, Laptop, Shirt, Sofa, Bike, BookOpen, Gamepad2, Baby, Wrench, Lo
 import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import ListingCard from "@/components/ListingCard";
+import ListingCard, { ListingCardSkeleton } from "@/components/ListingCard";
 import CategoryCard from "@/components/CategoryCard";
 import YandexMap from "@/components/YandexMap";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,6 +35,7 @@ interface DBListing {
 export default function HomePage() {
   const navigate = useNavigate();
   const [listings, setListings] = useState<DBListing[]>([]);
+  const [loading, setLoading] = useState(true);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<DBListing[]>([]);
@@ -46,27 +47,32 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: listingsData } = await supabase
-        .from("listings")
-        .select("id, title, images, price, location, is_charity, latitude, longitude, categories(name)")
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(8);
+      try {
+        const [{ data: listingsData }, { data: allListings }] = await Promise.all([
+          supabase
+            .from("listings")
+            .select("id, title, images, price, location, is_charity, latitude, longitude, categories(name)")
+            .eq("status", "active")
+            .order("created_at", { ascending: false })
+            .limit(8),
+          supabase
+            .from("listings")
+            .select("category_id, categories(name), latitude, longitude")
+            .eq("status", "active"),
+        ]);
 
-      if (listingsData) setListings(listingsData as DBListing[]);
+        if (listingsData) setListings(listingsData as DBListing[]);
 
-      const { data: allListings } = await supabase
-        .from("listings")
-        .select("category_id, categories(name), latitude, longitude")
-        .eq("status", "active");
-
-      if (allListings) {
-        const counts: Record<string, number> = {};
-        allListings.forEach((l: any) => {
-          const name = l.categories?.name;
-          if (name) counts[name] = (counts[name] || 0) + 1;
-        });
-        setCategoryCounts(counts);
+        if (allListings) {
+          const counts: Record<string, number> = {};
+          allListings.forEach((l: any) => {
+            const name = l.categories?.name;
+            if (name) counts[name] = (counts[name] || 0) + 1;
+          });
+          setCategoryCounts(counts);
+        }
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -246,7 +252,13 @@ export default function HomePage() {
           <h2 className="font-display text-xl font-semibold">Последние объявления</h2>
           <Link to="/browse" className="text-sm text-primary font-medium hover:underline">Смотреть все →</Link>
         </div>
-        {listings.length > 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <ListingCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : listings.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {listings.map((listing) => (
               <ListingCard
