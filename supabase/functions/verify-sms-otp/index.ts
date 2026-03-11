@@ -24,7 +24,6 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // SECURITY: If user is already authenticated, verify they're requesting for their own phone
     const authHeader = req.headers.get('Authorization');
     if (authHeader?.startsWith('Bearer ') && authHeader !== `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`) {
       const anonClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
@@ -44,7 +43,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Find valid OTP
     const { data: otpRecord, error: fetchError } = await supabase
       .from('phone_otp')
       .select('*')
@@ -61,25 +59,22 @@ Deno.serve(async (req) => {
       });
     }
 
-    // SECURITY: For Telegram channel, verify that the OTP was actually delivered
-    // The telegram_chat_id must start with "sent:" meaning the bot confirmed delivery
-    if (otpRecord.channel === 'telegram' && otpRecord.telegram_chat_id) {
-      if (!otpRecord.telegram_chat_id.startsWith('sent:')) {
-        return new Response(JSON.stringify({ error: 'Код ещё не доставлен. Откройте бота в Telegram.' }), {
+    let deliveredChatId: string | null = null;
+    if (otpRecord.channel === 'telegram') {
+      if (!otpRecord.telegram_chat_id?.startsWith('sent:')) {
+        return new Response(JSON.stringify({ error: 'Код ещё не подтверждён в Telegram. Откройте бота и подтвердите свой номер.' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+      deliveredChatId = otpRecord.telegram_chat_id.split(':').pop() || null;
     }
 
-    // Mark as verified & clean up
     await supabase.from('phone_otp').delete().eq('phone', phone);
 
-    // Deterministic internal email and password for phone users
     const userEmail = `${phone.replace('+', '')}@phone.user`;
     const internalPassword = `sms_auth_${phone}_${serviceRoleKey.slice(-12)}`;
 
-    // Check if user already exists
     const { data: existingUsers } = await supabase.auth.admin.listUsers({ perPage: 1000 });
     const existingUser = existingUsers?.users?.find(
       (u: any) => u.phone === phone || u.email === userEmail
@@ -108,10 +103,12 @@ Deno.serve(async (req) => {
       userId = newUser.user.id;
     }
 
-    // Link Telegram chat_id to user if exists
-    await supabase.from('telegram_chats')
-      .update({ user_id: userId })
-      .eq('phone', phone);
+    if (deliveredChatId) {
+      await supabase.from('telegram_chats').upsert(
+        { user_id: userId, phone, chat_id: deliveredChatId },
+        { onConflict: 'phone' }
+      );
+    }
 
     return new Response(JSON.stringify({
       success: true,

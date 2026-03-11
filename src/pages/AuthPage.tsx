@@ -50,6 +50,13 @@ export default function AuthPage() {
           setPhoneStep("verify");
           if (data.phone) setPhone(data.phone);
           toast({ title: "Код отправлен в Telegram!" });
+        } else if (data?.status === "rejected") {
+          resetFlow();
+          toast({
+            title: "Код не отправлен",
+            description: "В Telegram нужно подтвердить именно свой номер, и он должен совпадать с номером, введённым на сайте.",
+            variant: "destructive",
+          });
         } else if (data?.status === "expired") {
           setPhoneStep("enter");
           toast({ title: "Ссылка устарела. Попробуйте снова.", variant: "destructive" });
@@ -213,7 +220,7 @@ export default function AuthPage() {
 
               {authMethod === "telegram" && (
                 <p className="text-xs text-center text-muted-foreground">
-                  Код придёт в Telegram-бот. Нужно нажать на ссылку и открыть бота.
+                  После открытия бота Telegram попросит подтвердить ваш номер. Код придёт только если он совпадает с номером, введённым на сайте.
                 </p>
               )}
             </>
@@ -226,7 +233,7 @@ export default function AuthPage() {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Откройте Telegram и нажмите кнопку ниже, чтобы получить код:
+                  Откройте Telegram, нажмите кнопку ниже и подтвердите свой номер. Код придёт только если номер в Telegram совпадает с номером, введённым на сайте:
                 </p>
                 <a
                   href={telegramLink}
@@ -238,7 +245,7 @@ export default function AuthPage() {
                   Открыть Telegram
                 </a>
                 <p className="text-xs text-muted-foreground">
-                  Ожидание... Код будет отправлен автоматически после открытия бота.
+                  Ожидание подтверждения номера в Telegram...
                   {countdown > 0 && ` (${Math.floor(countdown / 60)}:${String(countdown % 60).padStart(2, '0')})`}
                 </p>
               </div>
