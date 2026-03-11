@@ -29,14 +29,18 @@ export default function ListingCard({ id, title, image, price, location, categor
           decoding="async"
           onLoad={() => setImgLoaded(true)}
         />
-        {isCharity && (
-          <span className="absolute top-2 left-2 rounded-full bg-charity px-2.5 py-0.5 text-xs font-medium text-charity-foreground">
-            Благотворительность
+        <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-1">
+          {isCharity ? (
+            <span className="rounded-full bg-charity px-2 py-0.5 text-[10px] sm:text-xs font-medium text-charity-foreground shrink-0 max-w-[55%] truncate">
+              Благотворительность
+            </span>
+          ) : (
+            <span />
+          )}
+          <span className="rounded-full bg-card/90 px-2 py-0.5 text-[10px] sm:text-xs font-medium backdrop-blur-sm shrink-0 max-w-[45%] truncate">
+            {category}
           </span>
-        )}
-        <span className="absolute top-2 right-2 rounded-full bg-card/90 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
-          {category}
-        </span>
+        </div>
       </div>
       <div className="p-3 min-w-0">
         <h3 className="font-display text-sm font-semibold truncate">{title}</h3>

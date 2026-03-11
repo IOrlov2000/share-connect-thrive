@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Settings, MapPin, Star, Package, Heart, FileText, ArrowRightLeft, ClipboardList, Headphones, LogOut, Trash2, ChevronRight } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
@@ -54,6 +54,7 @@ export default function ProfilePage() {
     <div className="container max-w-2xl py-6 space-y-6 animate-fade-in">
       <div className="flex items-center gap-4">
         <Avatar className="h-20 w-20">
+          {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="Avatar" />}
           <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-display font-bold">{initials}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
