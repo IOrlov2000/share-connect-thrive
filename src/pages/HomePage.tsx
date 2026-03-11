@@ -7,7 +7,7 @@ import ListingCard from "@/components/ListingCard";
 import CategoryCard from "@/components/CategoryCard";
 import YandexMap from "@/components/YandexMap";
 import { supabase } from "@/integrations/supabase/client";
-import heroBg from "@/assets/hero-bg.jpg";
+
 
 const categoryIcons = [
   { name: "Электроника", icon: Laptop },
