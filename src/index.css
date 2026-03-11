@@ -107,5 +107,12 @@ body {
 @layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+    background-size: 200% auto;
+    animation: shimmer 3s ease-in-out infinite;
   }
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
 }
