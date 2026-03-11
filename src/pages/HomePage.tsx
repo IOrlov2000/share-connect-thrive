@@ -126,7 +126,7 @@ export default function HomePage() {
     <div className="container px-4 py-6 space-y-8">
       {/* Hero */}
       <section
-        className="relative text-center space-y-4 py-10 sm:py-16 animate-fade-in rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent"
+        className="relative text-center space-y-4 py-10 sm:py-16 animate-fade-in rounded-2xl bg-gradient-to-br from-primary/10 via-secondary/10 to-accent"
       >
         <div className="relative z-10 space-y-4 px-4">
         <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-bold leading-tight">
@@ -138,59 +138,65 @@ export default function HomePage() {
         <p className="text-muted-foreground text-sm sm:text-lg max-w-xl mx-auto">
           Обменивай вещи, находи выгодные предложения или помогай нуждающимся.
         </p>
-        <div className="relative max-w-md mx-auto" ref={searchContainerRef}>
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-          {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
-          <Input
-            placeholder="Поиск объявлений..."
-            className="pl-10 h-12 rounded-full"
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
-            onFocus={() => searchResults.length > 0 && setShowResults(true)}
-            onKeyDown={handleSearchSubmit}
-          />
-          {showResults && searchResults.length > 0 && (
-            <div className="absolute z-30 mt-2 w-full rounded-xl border bg-popover shadow-xl max-h-80 overflow-y-auto">
+        </div>
+      </section>
+
+      {/* Search - outside hero to avoid overflow clipping */}
+      <div className="relative max-w-md mx-auto -mt-6 z-20" ref={searchContainerRef}>
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+        {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+        <Input
+          placeholder="Поиск объявлений..."
+          className="pl-10 h-12 rounded-full shadow-lg border-2"
+          value={search}
+          onChange={(e) => handleSearch(e.target.value)}
+          onFocus={() => searchResults.length > 0 && setShowResults(true)}
+          onKeyDown={handleSearchSubmit}
+        />
+        {showResults && searchResults.length > 0 && (
+          <div className="absolute z-30 mt-2 w-full rounded-xl border bg-popover shadow-xl overflow-hidden">
+            <div className="max-h-[60vh] overflow-y-auto">
               {searchResults.map((item) => (
                 <Link
                   key={item.id}
                   to={`/listing/${item.id}`}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3 hover:bg-accent transition-colors"
                   onClick={() => setShowResults(false)}
                 >
                   <img
                     src={item.images?.[0] || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=80&h=80&fit=crop"}
                     alt=""
-                    className="h-10 w-10 rounded-lg object-cover shrink-0"
+                    className="h-12 w-12 rounded-lg object-cover shrink-0"
                     loading="lazy"
                     decoding="async"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-primary font-semibold">
                       {item.is_charity ? "Бесплатно" : item.price ? `${item.price.toLocaleString()} ₽` : "Договорная"}
-                      {item.location ? ` · ${item.location}` : ""}
                     </p>
+                    {item.location && (
+                      <p className="text-[11px] text-muted-foreground truncate">{item.location}</p>
+                    )}
                   </div>
                 </Link>
               ))}
-              <Link
-                to={`/browse?search=${encodeURIComponent(search)}`}
-                className="block px-4 py-3 text-sm text-primary font-medium hover:bg-accent transition-colors text-center border-t"
-                onClick={() => setShowResults(false)}
-              >
-                Показать все результаты →
-              </Link>
             </div>
-          )}
-          {showResults && search.trim().length >= 2 && searchResults.length === 0 && !searching && (
-            <div className="absolute z-30 mt-2 w-full rounded-xl border bg-popover shadow-xl p-4 text-center text-sm text-muted-foreground">
-              Ничего не найдено по запросу «{search}»
-            </div>
-          )}
-        </div>
-        </div>
-      </section>
+            <Link
+              to={`/browse?search=${encodeURIComponent(search)}`}
+              className="block px-4 py-3 text-sm text-primary font-medium hover:bg-accent transition-colors text-center border-t"
+              onClick={() => setShowResults(false)}
+            >
+              Показать все результаты →
+            </Link>
+          </div>
+        )}
+        {showResults && search.trim().length >= 2 && searchResults.length === 0 && !searching && (
+          <div className="absolute z-30 mt-2 w-full rounded-xl border bg-popover shadow-xl p-4 text-center text-sm text-muted-foreground">
+            Ничего не найдено по запросу «{search}»
+          </div>
+        )}
+      </div>
 
       {/* Map - right after hero */}
       <section className="space-y-3">
