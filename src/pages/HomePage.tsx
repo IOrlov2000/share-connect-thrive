@@ -120,10 +120,8 @@ export default function HomePage() {
     <div className="container py-6 space-y-8">
       {/* Hero */}
       <section
-        className="relative text-center space-y-4 py-16 animate-fade-in rounded-2xl overflow-hidden"
-        style={{ backgroundImage: `url(${heroBg})`, backgroundSize: "cover", backgroundPosition: "center" }}
+        className="relative text-center space-y-4 py-16 animate-fade-in rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent"
       >
-        <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
         <div className="relative z-10 space-y-4">
         <h1 className="font-display text-4xl font-bold md:text-5xl">
           Обменивайся на <span className="text-gradient">Всё на Всё</span>
