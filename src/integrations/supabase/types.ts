@@ -73,6 +73,64 @@ export type Database = {
           },
         ]
       }
+      exchange_offers: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          id: string
+          receiver_id: string
+          receiver_listing_id: string
+          sender_id: string
+          sender_listing_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          receiver_id: string
+          receiver_listing_id: string
+          sender_id: string
+          sender_listing_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          receiver_id?: string
+          receiver_listing_id?: string
+          sender_id?: string
+          sender_listing_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exchange_offers_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exchange_offers_receiver_listing_id_fkey"
+            columns: ["receiver_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exchange_offers_sender_listing_id_fkey"
+            columns: ["sender_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string
