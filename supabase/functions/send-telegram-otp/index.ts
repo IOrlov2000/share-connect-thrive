@@ -7,8 +7,6 @@ const corsHeaders = {
 
 async function checkRateLimit(supabase: any, key: string, maxAttempts = 3, windowMinutes = 5, blockMinutes = 15): Promise<{ allowed: boolean; retryAfter?: number }> {
   const now = new Date();
-
-  // Check if blocked
   const { data: blocked } = await supabase
     .from('rate_limits')
     .select('*')
@@ -22,7 +20,6 @@ async function checkRateLimit(supabase: any, key: string, maxAttempts = 3, windo
     return { allowed: false, retryAfter };
   }
 
-  // Get recent attempts within window
   const windowStart = new Date(now.getTime() - windowMinutes * 60 * 1000).toISOString();
   const { data: record } = await supabase
     .from('rate_limits')
@@ -32,20 +29,17 @@ async function checkRateLimit(supabase: any, key: string, maxAttempts = 3, windo
     .maybeSingle();
 
   if (!record) {
-    // First attempt - create record
     await supabase.from('rate_limits').delete().eq('key', key);
     await supabase.from('rate_limits').insert({ key, attempts: 1, first_attempt_at: now.toISOString() });
     return { allowed: true };
   }
 
   if (record.attempts >= maxAttempts) {
-    // Block the key
     const blockedUntil = new Date(now.getTime() + blockMinutes * 60 * 1000).toISOString();
     await supabase.from('rate_limits').update({ blocked_until: blockedUntil }).eq('id', record.id);
     return { allowed: false, retryAfter: blockMinutes * 60 };
   }
 
-  // Increment attempts
   await supabase.from('rate_limits').update({ attempts: record.attempts + 1 }).eq('id', record.id);
   return { allowed: true };
 }
@@ -69,8 +63,8 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Rate limit by phone number (3 attempts per 5 minutes, block for 15 min)
-    const phoneLimit = await checkRateLimit(supabase, `sms:${phone}`, 3, 5, 15);
+    // Rate limit
+    const phoneLimit = await checkRateLimit(supabase, `tg:${phone}`, 3, 5, 15);
     if (!phoneLimit.allowed) {
       return new Response(JSON.stringify({ 
         error: `Слишком много попыток. Повторите через ${Math.ceil((phoneLimit.retryAfter || 900) / 60)} мин.` 
@@ -80,7 +74,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Rate limit by IP (10 attempts per 10 minutes)
     const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     const ipLimit = await checkRateLimit(supabase, `ip:${clientIP}`, 10, 10, 30);
     if (!ipLimit.allowed) {
@@ -95,51 +88,78 @@ Deno.serve(async (req) => {
     const code = String(Math.floor(100000 + Math.random() * 900000));
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
-    // Delete old OTPs for this phone
+    // Delete old OTPs
     await supabase.from('phone_otp').delete().eq('phone', phone);
 
-    // Insert new OTP
+    // Insert new OTP with telegram channel
     const { error: insertError } = await supabase.from('phone_otp').insert({
       phone,
       code,
       expires_at: expiresAt,
-      channel: 'sms',
+      channel: 'telegram',
     });
 
-    if (insertError) {
-      throw new Error(`DB error: ${insertError.message}`);
-    }
+    if (insertError) throw new Error(`DB error: ${insertError.message}`);
 
-    // Send SMS via SMSC.ru
-    const smscLogin = Deno.env.get('SMSC_LOGIN')!;
-    const smscPassword = Deno.env.get('SMSC_PASSWORD')!;
+    // Send code via Telegram Bot
+    const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')!;
+    
+    // Find chat_id by phone — we need the user to have started the bot first
+    // We'll look up the chat_id from previous interactions stored in phone_otp
+    // For first-time users, we search by phone in profiles or use the bot's getUpdates
+    
+    // Strategy: Use the phone number to find a telegram_chat_id stored from previous bot interactions
+    const { data: existingChat } = await supabase
+      .from('phone_otp')
+      .select('telegram_chat_id')
+      .eq('phone', phone)
+      .not('telegram_chat_id', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    const phoneDigits = phone.replace('+', '');
-    const message = `Код подтверждения: ${code}`;
+    // We already deleted old OTPs above, so check a separate mapping
+    // Better approach: store telegram mappings in a dedicated lookup
+    // For now, we'll use getUpdates to find users who sent /start with their phone
+    
+    // Actually, we need a different flow for Telegram:
+    // 1. User enters phone on the website
+    // 2. We generate an OTP and a unique link to the bot: t.me/botname?start=CODE
+    // 3. User opens the bot link, bot receives /start CODE
+    // 4. Bot webhook saves the chat_id paired with the code
+    // 5. Then we send the actual OTP code to that chat
+    
+    // Simpler approach: User must first link their phone via the bot
+    // Even simpler: We generate a deep link token, user clicks it, bot gets chat_id
+    
+    // Let's use the simplest approach:
+    // Generate a link token, user opens t.me/bot?start=LINK_TOKEN
+    // The webhook pairs link_token with chat_id
+    // Then we send the OTP to that chat_id
 
-    const params = new URLSearchParams({
-      login: smscLogin,
-      psw: smscPassword,
-      phones: phoneDigits,
-      mes: message,
-      fmt: '3', // JSON response
-      charset: 'utf-8',
-    });
+    const linkToken = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
 
-    const smsResponse = await fetch(`https://smsc.ru/sys/send.php?${params.toString()}`);
-    const smsData = await smsResponse.json();
-    console.log('SMSC response:', JSON.stringify(smsData));
+    // Store the link token with the OTP
+    await supabase.from('phone_otp').update({ 
+      telegram_chat_id: `pending:${linkToken}` 
+    }).eq('phone', phone).eq('code', code);
 
-    if (smsData.error) {
-      throw new Error(`SMSC error: ${smsData.error} (code: ${smsData.error_code})`);
-    }
+    // Get bot username
+    const botInfoRes = await fetch(`https://api.telegram.org/bot${botToken}/getMe`);
+    const botInfo = await botInfoRes.json();
+    const botUsername = botInfo.result?.username || 'your_bot';
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ 
+      success: true,
+      telegram_link: `https://t.me/${botUsername}?start=${linkToken}`,
+      bot_username: botUsername,
+      link_token: linkToken,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error:', error);
-    return new Response(JSON.stringify({ error: error.message || 'Ошибка отправки SMS' }), {
+    return new Response(JSON.stringify({ error: error.message || 'Ошибка Telegram' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

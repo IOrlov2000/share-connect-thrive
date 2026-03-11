@@ -283,27 +283,33 @@ export type Database = {
       }
       phone_otp: {
         Row: {
+          channel: string | null
           code: string
           created_at: string | null
           expires_at: string
           id: string
           phone: string
+          telegram_chat_id: string | null
           verified: boolean | null
         }
         Insert: {
+          channel?: string | null
           code: string
           created_at?: string | null
           expires_at: string
           id?: string
           phone: string
+          telegram_chat_id?: string | null
           verified?: boolean | null
         }
         Update: {
+          channel?: string | null
           code?: string
           created_at?: string | null
           expires_at?: string
           id?: string
           phone?: string
+          telegram_chat_id?: string | null
           verified?: boolean | null
         }
         Relationships: []
@@ -347,6 +353,33 @@ export type Database = {
           trades_count?: number | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          attempts: number
+          blocked_until: string | null
+          created_at: string
+          first_attempt_at: string
+          id: string
+          key: string
+        }
+        Insert: {
+          attempts?: number
+          blocked_until?: string | null
+          created_at?: string
+          first_attempt_at?: string
+          id?: string
+          key: string
+        }
+        Update: {
+          attempts?: number
+          blocked_until?: string | null
+          created_at?: string
+          first_attempt_at?: string
+          id?: string
+          key?: string
         }
         Relationships: []
       }

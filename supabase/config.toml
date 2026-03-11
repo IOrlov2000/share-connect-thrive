@@ -8,3 +8,15 @@ verify_jwt = false
 
 [functions.send-subscription-email]
 verify_jwt = false
+
+[functions.send-telegram-otp]
+verify_jwt = false
+
+[functions.telegram-webhook]
+verify_jwt = false
+
+[functions.check-telegram-otp]
+verify_jwt = false
+
+[functions.setup-telegram-webhook]
+verify_jwt = false
