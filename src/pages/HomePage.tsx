@@ -39,6 +39,7 @@ export default function HomePage() {
   const [searchResults, setSearchResults] = useState<DBListing[]>([]);
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [mapExpanded, setMapExpanded] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
