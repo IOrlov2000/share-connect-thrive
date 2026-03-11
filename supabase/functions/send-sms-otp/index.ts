@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
     const smscPassword = Deno.env.get('SMSC_PASSWORD')!;
 
     const phoneDigits = phone.replace('+', '');
-    const message = `Код подтверждения: ${code}`;
+    const message = `Kod: ${code}`;
 
     const params = new URLSearchParams({
       login: smscLogin,
@@ -124,8 +124,6 @@ Deno.serve(async (req) => {
       mes: message,
       fmt: '3',
       charset: 'utf-8',
-      translit: '1',
-      sender: 'VseNaVse',
     });
 
     const smsResponse = await fetch(`https://smsc.ru/sys/send.php?${params.toString()}`);
