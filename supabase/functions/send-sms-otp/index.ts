@@ -110,12 +110,14 @@ Deno.serve(async (req) => {
       throw new Error(`DB error: ${insertError.message}`);
     }
 
-    // Send SMS via SMSC.ru
+    // Send voice call via SMSC.ru (bypasses SMS text restrictions)
     const smscLogin = Deno.env.get('SMSC_LOGIN')!;
     const smscPassword = Deno.env.get('SMSC_PASSWORD')!;
 
     const phoneDigits = phone.replace('+', '');
-    const message = `Код подтверждения: ${code}`;
+    // Voice message reads digits one by one
+    const spokenCode = code.split('').join('. ');
+    const message = `Ваш код подтверждения: ${spokenCode}. Повторяю: ${spokenCode}.`;
 
     const params = new URLSearchParams({
       login: smscLogin,
@@ -124,8 +126,8 @@ Deno.serve(async (req) => {
       mes: message,
       fmt: '3',
       charset: 'utf-8',
-      translit: '1',
-      sender: 'VseNaVse',
+      call: '1',
+      voice: 'w',
     });
 
     const smsResponse = await fetch(`https://smsc.ru/sys/send.php?${params.toString()}`);

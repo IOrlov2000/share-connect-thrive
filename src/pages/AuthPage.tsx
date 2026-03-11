@@ -80,7 +80,7 @@ export default function AuthPage() {
 
         setPhoneStep("verify");
         setCountdown(60);
-        toast({ title: "Код отправлен на " + cleaned });
+        toast({ title: "Вам позвонит робот и продиктует код" });
       } else {
         // Telegram flow
         const { data, error } = await supabase.functions.invoke("send-telegram-otp", {
