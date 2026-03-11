@@ -1,43 +1,101 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRightLeft } from "lucide-react";
+import { ArrowLeft, ArrowRightLeft, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
-const offers = [
-  {
-    id: "1",
-    myItem: "MacBook Pro 2023",
-    theirItem: "iPhone 15 Pro + 20 000 ₽",
-    partner: "Анна М.",
-    status: "pending" as const,
-    date: "10 мар 2026",
-  },
-  {
-    id: "2",
-    myItem: "Винтажная кожаная куртка",
-    theirItem: "Кроссовки Nike Air + Рюкзак",
-    partner: "Дмитрий К.",
-    status: "accepted" as const,
-    date: "9 мар 2026",
-  },
-  {
-    id: "3",
-    myItem: "Горный велосипед Trek",
-    theirItem: "Nintendo Switch + 15 000 ₽",
-    partner: "Мария Л.",
-    status: "rejected" as const,
-    date: "8 мар 2026",
-  },
-];
+interface ExchangeOffer {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  status: string;
+  created_at: string;
+  sender_listing_title: string;
+  receiver_listing_title: string;
+  partner_name: string;
+  is_sender: boolean;
+}
 
-const statusMap = {
-  pending: { label: "Ожидает", variant: "outline" as const },
-  accepted: { label: "Принято", variant: "default" as const },
-  rejected: { label: "Отклонено", variant: "destructive" as const },
+const statusMap: Record<string, { label: string; variant: "outline" | "default" | "destructive" }> = {
+  pending: { label: "Ожидает", variant: "outline" },
+  accepted: { label: "Принято", variant: "default" },
+  rejected: { label: "Отклонено", variant: "destructive" },
 };
 
 export default function MyOffersPage() {
+  const { user } = useAuth();
+  const [offers, setOffers] = useState<ExchangeOffer[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchOffers = async () => {
+      const { data, error } = await supabase
+        .from("exchange_offers")
+        .select("*")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order("created_at", { ascending: false });
+
+      if (error || !data) {
+        setLoading(false);
+        return;
+      }
+
+      const enriched: ExchangeOffer[] = [];
+      for (const offer of data) {
+        const isSender = offer.sender_id === user.id;
+        const partnerId = isSender ? offer.receiver_id : offer.sender_id;
+
+        const [{ data: senderListing }, { data: receiverListing }, { data: profile }] = await Promise.all([
+          supabase.from("listings").select("title").eq("id", offer.sender_listing_id).maybeSingle(),
+          supabase.from("listings").select("title").eq("id", offer.receiver_listing_id).maybeSingle(),
+          supabase.from("profiles").select("display_name").eq("user_id", partnerId).maybeSingle(),
+        ]);
+
+        enriched.push({
+          id: offer.id,
+          sender_id: offer.sender_id,
+          receiver_id: offer.receiver_id,
+          status: offer.status,
+          created_at: offer.created_at,
+          sender_listing_title: senderListing?.title || "Удалено",
+          receiver_listing_title: receiverListing?.title || "Удалено",
+          partner_name: profile?.display_name || "Пользователь",
+          is_sender: isSender,
+        });
+      }
+      setOffers(enriched);
+      setLoading(false);
+    };
+    fetchOffers();
+  }, [user]);
+
+  const updateStatus = async (offerId: string, newStatus: string) => {
+    const { error } = await supabase
+      .from("exchange_offers")
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq("id", offerId);
+
+    if (error) {
+      toast({ title: "Ошибка", variant: "destructive" });
+    } else {
+      setOffers((prev) => prev.map((o) => (o.id === offerId ? { ...o, status: newStatus } : o)));
+      toast({ title: newStatus === "accepted" ? "Обмен принят! ✅" : "Предложение отклонено" });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="container max-w-2xl py-6 space-y-6 animate-fade-in">
       <div className="flex items-center gap-3">
@@ -55,34 +113,48 @@ export default function MyOffersPage() {
                 <div className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                      {offer.partner.charAt(0)}
+                      {offer.partner_name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm font-semibold">{offer.partner}</span>
+                  <span className="text-sm font-semibold">{offer.partner_name}</span>
                 </div>
-                <Badge variant={statusMap[offer.status].variant}>
-                  {statusMap[offer.status].label}
+                <Badge variant={statusMap[offer.status]?.variant || "outline"}>
+                  {statusMap[offer.status]?.label || offer.status}
                 </Badge>
               </div>
 
               <div className="flex items-center gap-3 text-sm">
                 <div className="flex-1 rounded-lg bg-muted p-3">
-                  <p className="text-xs text-muted-foreground">Вы отдаёте</p>
-                  <p className="font-medium mt-0.5">{offer.myItem}</p>
+                  <p className="text-xs text-muted-foreground">{offer.is_sender ? "Вы отдаёте" : "Вам предлагают"}</p>
+                  <p className="font-medium mt-0.5 truncate">{offer.is_sender ? offer.sender_listing_title : offer.receiver_listing_title}</p>
                 </div>
                 <ArrowRightLeft className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 rounded-lg bg-muted p-3">
-                  <p className="text-xs text-muted-foreground">Вы получаете</p>
-                  <p className="font-medium mt-0.5">{offer.theirItem}</p>
+                  <p className="text-xs text-muted-foreground">{offer.is_sender ? "Вы получаете" : "Они хотят"}</p>
+                  <p className="font-medium mt-0.5 truncate">{offer.is_sender ? offer.receiver_listing_title : offer.sender_listing_title}</p>
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">{offer.date}</span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(offer.created_at).toLocaleDateString("ru-RU")}
+                </span>
                 {offer.status === "pending" && (
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline">Отменить</Button>
-                    <Button size="sm">Написать</Button>
+                    {offer.is_sender ? (
+                      <Button size="sm" variant="outline" onClick={() => updateStatus(offer.id, "rejected")}>
+                        Отменить
+                      </Button>
+                    ) : (
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => updateStatus(offer.id, "rejected")}>
+                          Отклонить
+                        </Button>
+                        <Button size="sm" onClick={() => updateStatus(offer.id, "accepted")}>
+                          Принять
+                        </Button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import ExchangeModal from "@/components/ExchangeModal";
 
 interface ListingDetail {
   id: string;
@@ -36,6 +37,7 @@ export default function ListingDetailPage() {
   const [seller, setSeller] = useState<SellerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImage, setCurrentImage] = useState(0);
+  const [exchangeOpen, setExchangeOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -219,13 +221,27 @@ export default function ListingDetailPage() {
         <Button className="flex-1 h-12 text-base gap-2" onClick={handleMessage}>
           <MessageCircle className="h-5 w-5" /> Написать продавцу
         </Button>
-        <Button variant="outline" className="flex-1 h-12 text-base gap-2" onClick={() => !user ? navigate("/auth") : toast({ title: "Предложение обмена отправлено!" })}>
+        <Button variant="outline" className="flex-1 h-12 text-base gap-2" onClick={() => {
+          if (!user) { navigate("/auth"); return; }
+          if (listing.user_id === user.id) { toast({ title: "Это ваше объявление" }); return; }
+          setExchangeOpen(true);
+        }}>
           <ArrowRightLeft className="h-5 w-5" /> Предложить обмен
         </Button>
         <Button variant="outline" size="icon" className="h-12 w-12">
           <Heart className="h-5 w-5" />
         </Button>
       </div>
+
+      {listing && (
+        <ExchangeModal
+          open={exchangeOpen}
+          onOpenChange={setExchangeOpen}
+          targetListingId={listing.id}
+          targetListingTitle={listing.title}
+          targetUserId={listing.user_id}
+        />
+      )}
     </div>
   );
 }
