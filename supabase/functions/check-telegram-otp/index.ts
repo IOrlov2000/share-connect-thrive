@@ -24,13 +24,12 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Look for pending or sent records with this link token
     const { data: otpRecord } = await supabase
       .from('phone_otp')
       .select('*')
       .eq('verified', false)
       .gte('expires_at', new Date().toISOString())
-      .or(`telegram_chat_id.eq.pending:${link_token},telegram_chat_id.like.sent:${link_token}:%`)
+      .or(`telegram_chat_id.eq.pending:${link_token},telegram_chat_id.like.confirm:${link_token}:%,telegram_chat_id.like.sent:${link_token}:%,telegram_chat_id.like.rejected:${link_token}:%`)
       .maybeSingle();
 
     if (!otpRecord) {
@@ -39,14 +38,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (otpRecord.telegram_chat_id === `pending:${link_token}`) {
-      return new Response(JSON.stringify({ status: 'pending' }), {
+    if (otpRecord.telegram_chat_id?.startsWith(`sent:${link_token}:`)) {
+      return new Response(JSON.stringify({ status: 'sent', phone: otpRecord.phone }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Record starts with "sent:" — code was delivered via Telegram
-    return new Response(JSON.stringify({ status: 'sent', phone: otpRecord.phone }), {
+    if (otpRecord.telegram_chat_id?.startsWith(`rejected:${link_token}:`)) {
+      return new Response(JSON.stringify({ status: 'rejected' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    return new Response(JSON.stringify({ status: 'pending' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

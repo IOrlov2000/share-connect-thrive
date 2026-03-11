@@ -245,7 +245,7 @@ export default function AuthPage() {
                   Открыть Telegram
                 </a>
                 <p className="text-xs text-muted-foreground">
-                  Ожидание... Код будет отправлен автоматически после открытия бота.
+                  Ожидание подтверждения номера в Telegram...
                   {countdown > 0 && ` (${Math.floor(countdown / 60)}:${String(countdown % 60).padStart(2, '0')})`}
                 </p>
               </div>
