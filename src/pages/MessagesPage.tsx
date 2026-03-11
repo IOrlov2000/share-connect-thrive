@@ -90,6 +90,16 @@ export default function MessagesPage() {
         .eq("conversation_id", selectedConvo)
         .order("created_at", { ascending: true });
       if (!cancelled) setMessages(data || []);
+
+      // Mark unread messages as read
+      if (user) {
+        await supabase
+          .from("messages")
+          .update({ read: true })
+          .eq("conversation_id", selectedConvo)
+          .neq("sender_id", user.id)
+          .eq("read", false);
+      }
     };
     fetchMessages();
 

@@ -54,7 +54,10 @@ Deno.serve(async (req) => {
       (u: any) => u.phone === phone || u.email === userEmail
     );
 
+    let userId: string;
+    
     if (existingUser) {
+      userId = existingUser.id;
       // Ensure password is correct and phone is confirmed
       await supabase.auth.admin.updateUserById(existingUser.id, {
         password: internalPassword,
@@ -63,7 +66,7 @@ Deno.serve(async (req) => {
       });
     } else {
       // Create new user
-      const { error: createError } = await supabase.auth.admin.createUser({
+      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
         email: userEmail,
         phone,
         password: internalPassword,
@@ -73,7 +76,13 @@ Deno.serve(async (req) => {
       });
 
       if (createError) throw new Error(createError.message);
+      userId = newUser.user.id;
     }
+
+    // Link Telegram chat_id to user if exists
+    await supabase.from('telegram_chats')
+      .update({ user_id: userId })
+      .eq('phone', phone);
 
     return new Response(JSON.stringify({
       success: true,
