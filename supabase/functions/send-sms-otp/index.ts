@@ -49,14 +49,22 @@ Deno.serve(async (req) => {
     const phoneDigits = phone.replace('+', '');
     const message = `Ваш код подтверждения: ${code}`;
 
+    const smsBody = JSON.stringify({
+      number: phoneDigits,
+      text: message,
+      sign: "SMS Aero",
+      channel: "DIRECT",
+    });
+
     const smsResponse = await fetch(
-      `https://gate.smsaero.ru/v2/sms/send?number=${phoneDigits}&text=${encodeURIComponent(message)}&sign=SMS Aero&channel=DIRECT`,
+      `https://gate.smsaero.ru/v2/sms/send`,
       {
         method: 'POST',
         headers: {
           'Authorization': `Basic ${authToken}`,
           'Content-Type': 'application/json',
         },
+        body: smsBody,
       }
     );
 
