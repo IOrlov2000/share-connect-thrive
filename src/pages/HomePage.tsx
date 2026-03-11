@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, Laptop, Shirt, Sofa, Bike, BookOpen, Gamepad2, Baby, Wrench, Loader2 } from "lucide-react";
+import { Search, Laptop, Shirt, Sofa, Bike, BookOpen, Gamepad2, Baby, Wrench, Loader2, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import ListingCard from "@/components/ListingCard";
 import CategoryCard from "@/components/CategoryCard";
 import YandexMap from "@/components/YandexMap";
