@@ -35,6 +35,7 @@ interface DBListing {
 export default function HomePage() {
   const navigate = useNavigate();
   const [listings, setListings] = useState<DBListing[]>([]);
+  const [loading, setLoading] = useState(true);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<DBListing[]>([]);
