@@ -42,9 +42,9 @@ Deno.serve(async (req) => {
           .maybeSingle();
 
         if (otpRecord) {
-          // Update with real chat_id
+          // Update with real chat_id, keep link token for check function
           await supabase.from('phone_otp').update({ 
-            telegram_chat_id: String(chatId) 
+            telegram_chat_id: `sent:${linkToken}:${chatId}` 
           }).eq('id', otpRecord.id);
 
           // Send the OTP code

@@ -122,8 +122,10 @@ Deno.serve(async (req) => {
       psw: smscPassword,
       phones: phoneDigits,
       mes: message,
-      fmt: '3', // JSON response
+      fmt: '3',
       charset: 'utf-8',
+      translit: '1',
+      sender: 'VseNaVse',
     });
 
     const smsResponse = await fetch(`https://smsc.ru/sys/send.php?${params.toString()}`);
