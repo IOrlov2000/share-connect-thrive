@@ -232,6 +232,16 @@ export default function ListingDetailPage() {
           <Heart className="h-5 w-5" />
         </Button>
       </div>
+
+      {listing && (
+        <ExchangeModal
+          open={exchangeOpen}
+          onOpenChange={setExchangeOpen}
+          targetListingId={listing.id}
+          targetListingTitle={listing.title}
+          targetUserId={listing.user_id}
+        />
+      )}
     </div>
   );
 }
