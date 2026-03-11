@@ -24,6 +24,26 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // SECURITY: If user is already authenticated, verify they're requesting for their own phone
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ') && authHeader !== `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`) {
+      const anonClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: authHeader } }
+      });
+      const { data: { user: currentUser } } = await anonClient.auth.getUser();
+      if (currentUser) {
+        const normalizedPhone = phone.replace('+', '');
+        if (currentUser.phone && currentUser.phone !== normalizedPhone && currentUser.phone !== phone) {
+          return new Response(JSON.stringify({ 
+            error: 'Невозможно подтвердить чужой номер. Выйдите из аккаунта.' 
+          }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+    }
+
     // Find valid OTP
     const { data: otpRecord, error: fetchError } = await supabase
       .from('phone_otp')
@@ -39,6 +59,17 @@ Deno.serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // SECURITY: For Telegram channel, verify that the OTP was actually delivered
+    // The telegram_chat_id must start with "sent:" meaning the bot confirmed delivery
+    if (otpRecord.channel === 'telegram' && otpRecord.telegram_chat_id) {
+      if (!otpRecord.telegram_chat_id.startsWith('sent:')) {
+        return new Response(JSON.stringify({ error: 'Код ещё не доставлен. Откройте бота в Telegram.' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // Mark as verified & clean up
@@ -58,14 +89,12 @@ Deno.serve(async (req) => {
     
     if (existingUser) {
       userId = existingUser.id;
-      // Ensure password is correct and phone is confirmed
       await supabase.auth.admin.updateUserById(existingUser.id, {
         password: internalPassword,
         phone,
         phone_confirm: true,
       });
     } else {
-      // Create new user
       const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
         email: userEmail,
         phone,
