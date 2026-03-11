@@ -3,7 +3,7 @@ import { Search, Laptop, Shirt, Sofa, Bike, BookOpen, Gamepad2, Baby, Wrench, Lo
 import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import ListingCard from "@/components/ListingCard";
+import ListingCard, { ListingCardSkeleton } from "@/components/ListingCard";
 import CategoryCard from "@/components/CategoryCard";
 import YandexMap from "@/components/YandexMap";
 import { supabase } from "@/integrations/supabase/client";
