@@ -221,7 +221,11 @@ export default function ListingDetailPage() {
         <Button className="flex-1 h-12 text-base gap-2" onClick={handleMessage}>
           <MessageCircle className="h-5 w-5" /> Написать продавцу
         </Button>
-        <Button variant="outline" className="flex-1 h-12 text-base gap-2" onClick={() => !user ? navigate("/auth") : toast({ title: "Предложение обмена отправлено!" })}>
+        <Button variant="outline" className="flex-1 h-12 text-base gap-2" onClick={() => {
+          if (!user) { navigate("/auth"); return; }
+          if (listing.user_id === user.id) { toast({ title: "Это ваше объявление" }); return; }
+          setExchangeOpen(true);
+        }}>
           <ArrowRightLeft className="h-5 w-5" /> Предложить обмен
         </Button>
         <Button variant="outline" size="icon" className="h-12 w-12">
