@@ -233,7 +233,7 @@ export default function AuthPage() {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Откройте Telegram и нажмите кнопку ниже, чтобы получить код:
+                  Откройте Telegram, нажмите кнопку ниже и подтвердите свой номер. Код придёт только если номер в Telegram совпадает с номером, введённым на сайте:
                 </p>
                 <a
                   href={telegramLink}
