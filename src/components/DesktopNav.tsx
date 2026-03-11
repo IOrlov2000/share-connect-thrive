@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, PlusCircle, MessageCircle, User, Heart } from "lucide-react";
+import { Home, Search, PlusCircle, MessageCircle, User, Heart, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { to: "/", icon: Home, label: "Главная" },
@@ -13,6 +14,7 @@ const navItems = [
 
 export default function DesktopNav() {
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 hidden border-b bg-card/80 backdrop-blur-md md:block">
@@ -37,9 +39,15 @@ export default function DesktopNav() {
             );
           })}
         </nav>
-        <Link to="/auth">
-          <Button size="sm">Войти</Button>
-        </Link>
+        {user ? (
+          <Button size="sm" variant="outline" onClick={signOut}>
+            <LogOut className="mr-2 h-4 w-4" /> Выйти
+          </Button>
+        ) : (
+          <Link to="/auth">
+            <Button size="sm">Войти</Button>
+          </Link>
+        )}
       </div>
     </header>
   );
