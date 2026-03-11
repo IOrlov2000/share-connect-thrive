@@ -47,10 +47,8 @@ Deno.serve(async (req) => {
             telegram_chat_id: `sent:${linkToken}:${chatId}` 
           }).eq('id', otpRecord.id);
 
-          // Send the OTP code with a button to return to the site
-          const otpMessage = `🔐 Ваш код подтверждения для «Всё на Всё»:\n\n<b>${otpRecord.code}</b>\n\nКод действителен 5 минут.\nВведите его на сайте.`;
-          
-          const siteUrl = Deno.env.get('SITE_URL') || 'https://share-connect-thrive.lovable.app';
+          // Send the OTP code
+          const otpMessage = `🔐 Ваш код подтверждения для «Всё на Всё»:\n\n<b>${otpRecord.code}</b>\n\nВведите его на сайте. Код действителен 5 минут.`;
           
           await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
             method: 'POST',
@@ -59,11 +57,6 @@ Deno.serve(async (req) => {
               chat_id: chatId,
               text: otpMessage,
               parse_mode: 'HTML',
-              reply_markup: {
-                inline_keyboard: [[
-                  { text: '🌐 Вернуться на сайт', url: `${siteUrl}/auth` }
-                ]]
-              }
             }),
           });
         } else {
