@@ -252,7 +252,13 @@ export default function HomePage() {
           <h2 className="font-display text-xl font-semibold">Последние объявления</h2>
           <Link to="/browse" className="text-sm text-primary font-medium hover:underline">Смотреть все →</Link>
         </div>
-        {listings.length > 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <ListingCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : listings.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {listings.map((listing) => (
               <ListingCard
