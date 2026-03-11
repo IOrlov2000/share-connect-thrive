@@ -37,6 +37,7 @@ export default function ListingDetailPage() {
   const [seller, setSeller] = useState<SellerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImage, setCurrentImage] = useState(0);
+  const [exchangeOpen, setExchangeOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
