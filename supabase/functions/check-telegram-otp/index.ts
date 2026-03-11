@@ -24,33 +24,28 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Check if the OTP record has been claimed (chat_id is no longer pending)
+    // Look for pending or sent records with this link token
     const { data: otpRecord } = await supabase
       .from('phone_otp')
       .select('*')
       .eq('verified', false)
       .gte('expires_at', new Date().toISOString())
-      .or(`telegram_chat_id.eq.pending:${link_token}`)
+      .or(`telegram_chat_id.eq.pending:${link_token},telegram_chat_id.like.sent:${link_token}:%`)
       .maybeSingle();
 
     if (!otpRecord) {
-      // Maybe it was already claimed - check with a numeric chat_id
-      // The record might have been updated with a real chat_id
-      // We need to find it differently - search by the code that was generated
       return new Response(JSON.stringify({ status: 'expired' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     if (otpRecord.telegram_chat_id === `pending:${link_token}`) {
-      // Still waiting for user to click the Telegram link
       return new Response(JSON.stringify({ status: 'pending' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Chat ID has been set — user received the code in Telegram
-    // Now they need to enter it on the website (same verify-sms-otp flow)
+    // Record starts with "sent:" — code was delivered via Telegram
     return new Response(JSON.stringify({ status: 'sent', phone: otpRecord.phone }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
