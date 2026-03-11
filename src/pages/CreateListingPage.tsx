@@ -247,8 +247,9 @@ export default function CreateListingPage() {
               title="map-preview"
               width="100%"
               height="250"
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${longitude - 0.01},${latitude - 0.01},${longitude + 0.01},${latitude + 0.01}&layer=mapnik&marker=${latitude},${longitude}`}
+              src={`https://yandex.ru/map-widget/v1/?ll=${longitude},${latitude}&z=15&pt=${longitude},${latitude},pm2rdm`}
               className="rounded-xl"
+              style={{ border: 0 }}
             />
           </div>
         )}

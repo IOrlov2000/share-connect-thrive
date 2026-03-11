@@ -7,6 +7,7 @@ import ListingCard from "@/components/ListingCard";
 import CategoryCard from "@/components/CategoryCard";
 import YandexMap from "@/components/YandexMap";
 import { supabase } from "@/integrations/supabase/client";
+import heroBg from "@/assets/hero-bg.jpg";
 
 const categoryIcons = [
   { name: "Электроника", icon: Laptop },
@@ -118,7 +119,12 @@ export default function HomePage() {
   return (
     <div className="container py-6 space-y-8">
       {/* Hero */}
-      <section className="text-center space-y-4 py-8 animate-fade-in">
+      <section
+        className="relative text-center space-y-4 py-16 animate-fade-in rounded-2xl overflow-hidden"
+        style={{ backgroundImage: `url(${heroBg})`, backgroundSize: "cover", backgroundPosition: "center" }}
+      >
+        <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
+        <div className="relative z-10 space-y-4">
         <h1 className="font-display text-4xl font-bold md:text-5xl">
           Обменивайся на <span className="text-gradient">Всё на Всё</span>
         </h1>
@@ -173,6 +179,7 @@ export default function HomePage() {
               Ничего не найдено по запросу «{search}»
             </div>
           )}
+        </div>
         </div>
       </section>
 
