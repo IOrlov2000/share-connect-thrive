@@ -256,7 +256,7 @@ export default function AuthPage() {
                 {authMethod === "telegram" && " через Telegram"}
               </p>
               <div className="flex justify-center">
-                <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                <InputOTP maxLength={6} value={otpCode} onChange={handleOtpChange} autoFocus>
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
