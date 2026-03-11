@@ -156,6 +156,8 @@ export default function HomePage() {
                     src={item.images?.[0] || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=80&h=80&fit=crop"}
                     alt=""
                     className="h-10 w-10 rounded-lg object-cover shrink-0"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{item.title}</p>
