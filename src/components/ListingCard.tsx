@@ -25,12 +25,12 @@ export default function ListingCard({ id, title, image, price, location, categor
           {category}
         </span>
       </div>
-      <div className="p-3">
+      <div className="p-3 min-w-0">
         <h3 className="font-display text-sm font-semibold truncate">{title}</h3>
-        <p className="mt-0.5 text-lg font-bold text-primary">{price}</p>
-        <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-          <MapPin className="h-3 w-3" />
-          <span>{location}</span>
+        <p className="mt-0.5 text-base sm:text-lg font-bold text-primary truncate">{price}</p>
+        <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground min-w-0">
+          <MapPin className="h-3 w-3 shrink-0" />
+          <span className="truncate">{location}</span>
         </div>
       </div>
     </Link>

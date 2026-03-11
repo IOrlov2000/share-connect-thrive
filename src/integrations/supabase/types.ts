@@ -292,6 +292,27 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          notified_to: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          notified_to?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          notified_to?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
