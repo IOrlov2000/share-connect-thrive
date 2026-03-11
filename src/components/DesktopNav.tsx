@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Home, Search, PlusCircle, MessageCircle, User, Heart, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 const navItems = [
   { to: "/", icon: Home, label: "Главная" },
@@ -15,6 +16,7 @@ const navItems = [
 export default function DesktopNav() {
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const unreadCount = useUnreadMessages();
 
   return (
     <header className="sticky top-0 z-50 hidden border-b bg-card/80 backdrop-blur-md md:block">
@@ -26,16 +28,22 @@ export default function DesktopNav() {
         <nav className="flex items-center gap-1">
           {navItems.map(({ to, icon: Icon, label }) => {
             const active = location.pathname === to;
+            const isMessages = to === "/messages";
             return (
               <Link
                 key={to}
                 to={to}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent ${
+                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent ${
                   active ? "bg-accent text-accent-foreground" : "text-muted-foreground"
                 }`}
               >
                 <Icon className="h-4 w-4" />
                 <span>{label}</span>
+                {isMessages && unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
               </Link>
             );
           })}
