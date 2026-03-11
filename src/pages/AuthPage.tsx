@@ -102,8 +102,9 @@ export default function AuthPage() {
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (otpCode.length !== 6) {
+  const handleVerifyOtp = async (codeToVerify?: string) => {
+    const finalCode = codeToVerify || otpCode;
+    if (finalCode.length !== 6) {
       toast({ title: "Введите 6-значный код", variant: "destructive" });
       return;
     }
@@ -112,7 +113,7 @@ export default function AuthPage() {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("verify-sms-otp", {
-        body: { phone: cleaned, code: otpCode },
+        body: { phone: cleaned, code: finalCode },
       });
 
       if (error) throw error;
@@ -131,6 +132,13 @@ export default function AuthPage() {
       toast({ title: "Ошибка верификации", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOtpChange = (value: string) => {
+    setOtpCode(value);
+    if (value.length === 6) {
+      handleVerifyOtp(value);
     }
   };
 
@@ -248,7 +256,7 @@ export default function AuthPage() {
                 {authMethod === "telegram" && " через Telegram"}
               </p>
               <div className="flex justify-center">
-                <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                <InputOTP maxLength={6} value={otpCode} onChange={handleOtpChange} autoFocus>
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
@@ -259,7 +267,7 @@ export default function AuthPage() {
                   </InputOTPGroup>
                 </InputOTP>
               </div>
-              <Button className="w-full h-12" onClick={handleVerifyOtp} disabled={loading || otpCode.length !== 6}>
+              <Button className="w-full h-12" onClick={() => handleVerifyOtp()} disabled={loading || otpCode.length !== 6}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
                 Подтвердить
               </Button>
