@@ -47,6 +47,12 @@ Deno.serve(async (req) => {
             telegram_chat_id: `sent:${linkToken}:${chatId}` 
           }).eq('id', otpRecord.id);
 
+          // Save chat_id for future notifications (upsert by phone)
+          await supabase.from('telegram_chats').upsert(
+            { phone: otpRecord.phone, chat_id: String(chatId), user_id: '00000000-0000-0000-0000-000000000000' },
+            { onConflict: 'phone' }
+          );
+
           // Send the OTP code
           const otpMessage = `🔐 Ваш код подтверждения для «Всё на Всё»:\n\n<b>${otpRecord.code}</b>\n\nВведите его на сайте. Код действителен 5 минут.`;
           
