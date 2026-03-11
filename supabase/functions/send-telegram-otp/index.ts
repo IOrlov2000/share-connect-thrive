@@ -63,6 +63,28 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // SECURITY: Check if this phone is already logged in from another account
+    // If someone is already authenticated with a different phone, they cannot request OTP for a different number
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ') && authHeader !== `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`) {
+      const anonClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: authHeader } }
+      });
+      const { data: { user: currentUser } } = await anonClient.auth.getUser();
+      if (currentUser) {
+        // User is logged in — check if the requested phone matches their phone
+        const normalizedPhone = phone.replace('+', '');
+        if (currentUser.phone && currentUser.phone !== normalizedPhone && currentUser.phone !== phone) {
+          return new Response(JSON.stringify({ 
+            error: 'Вы уже авторизованы под другим номером. Выйдите из аккаунта, чтобы войти под другим номером.' 
+          }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+    }
+
     // Rate limit
     const phoneLimit = await checkRateLimit(supabase, `tg:${phone}`, 3, 5, 15);
     if (!phoneLimit.allowed) {
@@ -101,41 +123,7 @@ Deno.serve(async (req) => {
 
     if (insertError) throw new Error(`DB error: ${insertError.message}`);
 
-    // Send code via Telegram Bot
     const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN')!;
-    
-    // Find chat_id by phone — we need the user to have started the bot first
-    // We'll look up the chat_id from previous interactions stored in phone_otp
-    // For first-time users, we search by phone in profiles or use the bot's getUpdates
-    
-    // Strategy: Use the phone number to find a telegram_chat_id stored from previous bot interactions
-    const { data: existingChat } = await supabase
-      .from('phone_otp')
-      .select('telegram_chat_id')
-      .eq('phone', phone)
-      .not('telegram_chat_id', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    // We already deleted old OTPs above, so check a separate mapping
-    // Better approach: store telegram mappings in a dedicated lookup
-    // For now, we'll use getUpdates to find users who sent /start with their phone
-    
-    // Actually, we need a different flow for Telegram:
-    // 1. User enters phone on the website
-    // 2. We generate an OTP and a unique link to the bot: t.me/botname?start=CODE
-    // 3. User opens the bot link, bot receives /start CODE
-    // 4. Bot webhook saves the chat_id paired with the code
-    // 5. Then we send the actual OTP code to that chat
-    
-    // Simpler approach: User must first link their phone via the bot
-    // Even simpler: We generate a deep link token, user clicks it, bot gets chat_id
-    
-    // Let's use the simplest approach:
-    // Generate a link token, user opens t.me/bot?start=LINK_TOKEN
-    // The webhook pairs link_token with chat_id
-    // Then we send the OTP to that chat_id
 
     const linkToken = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
 

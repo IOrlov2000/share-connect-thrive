@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, ArrowLeft, User } from "lucide-react";
+import { Send, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ interface Conversation {
   other_name: string;
   other_id: string;
   last_message: string | null;
+  unread_count: number;
 }
 
 interface Message {
@@ -38,41 +39,65 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Load conversations
+  // Fetch conversations helper
+  const fetchConversations = useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("conversations")
+      .select("*")
+      .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
+      .order("updated_at", { ascending: false });
+
+    if (error) {
+      toast({ title: "Ошибка загрузки чатов", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
+    const convos: Conversation[] = [];
+    for (const c of data || []) {
+      const otherId = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
+      const [{ data: profile }, { data: lastMsg }, { count: unread }] = await Promise.all([
+        supabase.from("profiles").select("display_name").eq("user_id", otherId).maybeSingle(),
+        supabase.from("messages").select("content").eq("conversation_id", c.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("messages").select("*", { count: "exact", head: true }).eq("conversation_id", c.id).neq("sender_id", user.id).eq("read", false),
+      ]);
+      convos.push({
+        ...c,
+        other_name: profile?.display_name || "Пользователь",
+        other_id: otherId,
+        last_message: lastMsg?.content || null,
+        unread_count: unread || 0,
+      });
+    }
+    setConversations(convos);
+    setLoading(false);
+  }, [user]);
+
+  // Load conversations + realtime subscription for new messages across ALL conversations
   useEffect(() => {
     if (!user) return;
-    const fetchConversations = async () => {
-      const { data, error } = await supabase
-        .from("conversations")
-        .select("*")
-        .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
-        .order("updated_at", { ascending: false });
-
-      if (error) {
-        toast({ title: "Ошибка загрузки чатов", variant: "destructive" });
-        setLoading(false);
-        return;
-      }
-
-      const convos: Conversation[] = [];
-      for (const c of data || []) {
-        const otherId = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
-        const [{ data: profile }, { data: lastMsg }] = await Promise.all([
-          supabase.from("profiles").select("display_name").eq("user_id", otherId).maybeSingle(),
-          supabase.from("messages").select("content").eq("conversation_id", c.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-        ]);
-        convos.push({
-          ...c,
-          other_name: profile?.display_name || "Пользователь",
-          other_id: otherId,
-          last_message: lastMsg?.content || null,
-        });
-      }
-      setConversations(convos);
-      setLoading(false);
-    };
     fetchConversations();
-  }, [user]);
+
+    const channel = supabase
+      .channel("all-messages-updates")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        (payload) => {
+          const msg = payload.new as any;
+          // If new message is not from current user, refresh conversations
+          if (msg.sender_id !== user.id) {
+            fetchConversations();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchConversations]);
 
   // Load messages for selected conversation
   useEffect(() => {
@@ -99,6 +124,11 @@ export default function MessagesPage() {
           .eq("conversation_id", selectedConvo)
           .neq("sender_id", user.id)
           .eq("read", false);
+
+        // Update unread count in local state
+        setConversations((prev) =>
+          prev.map((c) => c.id === selectedConvo ? { ...c, unread_count: 0 } : c)
+        );
       }
     };
     fetchMessages();
@@ -117,10 +147,16 @@ export default function MessagesPage() {
           if (!cancelled) {
             const newMsg = payload.new as Message;
             setMessages((prev) => {
-              // Avoid duplicates
               if (prev.some((m) => m.id === newMsg.id)) return prev;
               return [...prev, newMsg];
             });
+            // Mark as read immediately if it's from other user
+            if (user && newMsg.sender_id !== user.id) {
+              supabase
+                .from("messages")
+                .update({ read: true })
+                .eq("id", newMsg.id);
+            }
           }
         }
       )
@@ -130,7 +166,7 @@ export default function MessagesPage() {
       cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [selectedConvo]);
+  }, [selectedConvo, user]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -153,14 +189,13 @@ export default function MessagesPage() {
 
     if (error) {
       toast({ title: "Не удалось отправить", variant: "destructive" });
-      setNewMessage(content); // restore
+      setNewMessage(content);
     } else {
       await supabase
         .from("conversations")
         .update({ updated_at: new Date().toISOString() })
         .eq("id", selectedConvo);
 
-      // Update last message in conversation list
       setConversations((prev) =>
         prev.map((c) =>
           c.id === selectedConvo ? { ...c, last_message: content, updated_at: new Date().toISOString() } : c
@@ -197,18 +232,29 @@ export default function MessagesPage() {
                   key={convo.id}
                   onClick={() => setSelectedConvo(convo.id)}
                   className={`flex w-full items-center gap-3 border-b p-4 text-left transition-colors hover:bg-muted/50 ${
-                    selectedConvo === convo.id ? "bg-accent" : ""
+                    selectedConvo === convo.id ? "bg-accent" : convo.unread_count > 0 ? "bg-primary/5" : ""
                   }`}
                 >
-                  <Avatar>
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                      {convo.other_name.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar>
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                        {convo.other_name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    {convo.unread_count > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                        {convo.unread_count > 99 ? "99+" : convo.unread_count}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <span className="font-semibold text-sm">{convo.other_name}</span>
+                    <span className={`text-sm ${convo.unread_count > 0 ? "font-bold" : "font-semibold"}`}>
+                      {convo.other_name}
+                    </span>
                     {convo.last_message && (
-                      <p className="text-xs text-muted-foreground truncate">{convo.last_message}</p>
+                      <p className={`text-xs truncate ${convo.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                        {convo.last_message}
+                      </p>
                     )}
                     <p className="text-[10px] text-muted-foreground">
                       {new Date(convo.updated_at).toLocaleDateString("ru-RU")}
