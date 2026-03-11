@@ -217,21 +217,28 @@ export default function ListingDetailPage() {
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Button className="flex-1 h-12 text-base gap-2" onClick={handleMessage}>
-          <MessageCircle className="h-5 w-5" /> Написать продавцу
-        </Button>
-        <Button variant="outline" className="flex-1 h-12 text-base gap-2" onClick={() => {
-          if (!user) { navigate("/auth"); return; }
-          if (listing.user_id === user.id) { toast({ title: "Это ваше объявление" }); return; }
-          setExchangeOpen(true);
-        }}>
-          <ArrowRightLeft className="h-5 w-5" /> Предложить обмен
-        </Button>
-        <Button variant="outline" size="icon" className="h-12 w-12">
-          <Heart className="h-5 w-5" />
-        </Button>
-      </div>
+      {user?.id === listing.user_id ? (
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button className="flex-1 h-12 text-base gap-2" variant="outline" onClick={() => navigate("/my-listings")}>
+            Управление объявлениями
+          </Button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button className="flex-1 h-12 text-base gap-2" onClick={handleMessage}>
+            <MessageCircle className="h-5 w-5" /> Написать продавцу
+          </Button>
+          <Button variant="outline" className="flex-1 h-12 text-base gap-2" onClick={() => {
+            if (!user) { navigate("/auth"); return; }
+            setExchangeOpen(true);
+          }}>
+            <ArrowRightLeft className="h-5 w-5" /> Предложить обмен
+          </Button>
+          <Button variant="outline" size="icon" className="h-12 w-12">
+            <Heart className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
 
       {listing && (
         <ExchangeModal
