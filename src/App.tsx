@@ -21,6 +21,9 @@ import MyRequestsPage from "@/pages/MyRequestsPage";
 import ProfileSettingsPage from "@/pages/ProfileSettingsPage";
 import SupportPage from "@/pages/SupportPage";
 import UserProfilePage from "@/pages/UserProfilePage";
+import RulesPage from "@/pages/RulesPage";
+import FAQPage from "@/pages/FAQPage";
+import PublicSupportPage from "@/pages/PublicSupportPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +40,9 @@ const App = () => (
               <Route path="/" element={<HomePage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/browse" element={<BrowsePage />} />
+              <Route path="/rules" element={<RulesPage />} />
+              <Route path="/faq" element={<FAQPage />} />
+              <Route path="/support" element={<PublicSupportPage />} />
               <Route path="/create" element={<RequireAuth><CreateListingPage /></RequireAuth>} />
               <Route path="/messages" element={<RequireAuth><MessagesPage /></RequireAuth>} />
               <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
