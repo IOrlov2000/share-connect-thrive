@@ -124,7 +124,8 @@ export default function HomePage() {
       >
         <div className="relative z-10 space-y-4 px-4">
         <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-bold leading-tight">
-          Обменивайся на <span className="text-gradient">Всё на Всё</span>
+          <span className="inline-block animate-[fade-in_0.6s_ease-out_0.1s_both]">Обменивайся на</span>{" "}
+          <span className="text-gradient inline-block animate-[fade-in_0.8s_ease-out_0.4s_both] hover:scale-105 transition-transform duration-300 cursor-default">Всё на Всё</span>
         </h1>
         <p className="text-muted-foreground text-sm sm:text-lg max-w-xl mx-auto">
           Обменивай вещи, находи выгодные предложения или помогай нуждающимся.

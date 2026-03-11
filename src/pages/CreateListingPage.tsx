@@ -110,17 +110,42 @@ export default function CreateListingPage() {
     }
     setSubmitting(true);
 
-    // Upload images
-    const imageUrls: string[] = [];
-    for (const file of images) {
-      const ext = file.name.split(".").pop();
-      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from("listing-images").upload(path, file);
+    // Compress and upload images in parallel
+    const compressImage = async (file: File, maxWidth = 1200, quality = 0.8): Promise<Blob> => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ratio = Math.min(maxWidth / img.width, 1);
+          canvas.width = img.width * ratio;
+          canvas.height = img.height * ratio;
+          const ctx = canvas.getContext("2d")!;
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(
+            (blob) => resolve(blob || file),
+            "image/webp",
+            quality
+          );
+        };
+        img.src = URL.createObjectURL(file);
+      });
+    };
+
+    const uploadPromises = images.map(async (file) => {
+      const compressed = await compressImage(file);
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.webp`;
+      const { error } = await supabase.storage.from("listing-images").upload(path, compressed, {
+        contentType: "image/webp",
+      });
       if (!error) {
         const { data: urlData } = supabase.storage.from("listing-images").getPublicUrl(path);
-        imageUrls.push(urlData.publicUrl);
+        return urlData.publicUrl;
       }
-    }
+      return null;
+    });
+
+    const results = await Promise.all(uploadPromises);
+    const imageUrls = results.filter(Boolean) as string[];
 
     const { error } = await supabase.from("listings").insert({
       title: title.trim(),
