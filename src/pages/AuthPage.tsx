@@ -267,7 +267,7 @@ export default function AuthPage() {
                   </InputOTPGroup>
                 </InputOTP>
               </div>
-              <Button className="w-full h-12" onClick={handleVerifyOtp} disabled={loading || otpCode.length !== 6}>
+              <Button className="w-full h-12" onClick={() => handleVerifyOtp()} disabled={loading || otpCode.length !== 6}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
                 Подтвердить
               </Button>
