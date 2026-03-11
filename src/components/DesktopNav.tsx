@@ -19,8 +19,9 @@ export default function DesktopNav() {
   return (
     <header className="sticky top-0 z-50 hidden border-b bg-card/80 backdrop-blur-md md:block">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="font-display text-2xl font-bold text-gradient">
-          Всё на Всё
+        <Link to="/" className="flex flex-col">
+          <span className="font-display text-2xl font-bold text-gradient leading-none">Всё на Всё</span>
+          <span className="text-[10px] text-muted-foreground tracking-wider uppercase">сервис обмена</span>
         </Link>
         <nav className="flex items-center gap-1">
           {navItems.map(({ to, icon: Icon, label }) => {
