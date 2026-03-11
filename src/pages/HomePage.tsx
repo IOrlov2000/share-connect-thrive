@@ -176,6 +176,44 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Map - right after hero */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-xl font-semibold flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-primary" />
+            Объявления на карте
+          </h2>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            onClick={() => setMapExpanded(!mapExpanded)}
+          >
+            {mapExpanded ? (
+              <>Свернуть <ChevronUp className="ml-1 h-4 w-4" /></>
+            ) : (
+              <>Открыть карту <ChevronDown className="ml-1 h-4 w-4" /></>
+            )}
+          </Button>
+        </div>
+        <div className={`transition-all duration-300 overflow-hidden ${mapExpanded ? "max-h-[600px]" : "max-h-[200px]"}`}>
+          <YandexMap
+            listings={listings
+              .filter((l) => l.latitude && l.longitude)
+              .map((l) => ({
+                id: l.id,
+                title: l.title,
+                latitude: l.latitude!,
+                longitude: l.longitude!,
+                price: l.price,
+                is_charity: l.is_charity || false,
+                image: l.images?.[0],
+              }))}
+            className={mapExpanded ? "!h-[580px]" : "!h-[200px]"}
+          />
+        </div>
+      </section>
+
       {/* Categories */}
       <section className="space-y-4">
         <h2 className="font-display text-xl font-semibold">Категории</h2>
@@ -190,24 +228,6 @@ export default function HomePage() {
             />
           ))}
         </div>
-      </section>
-
-      {/* Map */}
-      <section className="space-y-4">
-        <h2 className="font-display text-xl font-semibold">Объявления на карте</h2>
-        <YandexMap
-          listings={listings
-            .filter((l) => l.latitude && l.longitude)
-            .map((l) => ({
-              id: l.id,
-              title: l.title,
-              latitude: l.latitude!,
-              longitude: l.longitude!,
-              price: l.price,
-              is_charity: l.is_charity || false,
-              image: l.images?.[0],
-            }))}
-        />
       </section>
 
       {/* Listings from DB */}
