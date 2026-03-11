@@ -50,6 +50,13 @@ export default function AuthPage() {
           setPhoneStep("verify");
           if (data.phone) setPhone(data.phone);
           toast({ title: "Код отправлен в Telegram!" });
+        } else if (data?.status === "rejected") {
+          resetFlow();
+          toast({
+            title: "Код не отправлен",
+            description: "В Telegram нужно подтвердить именно свой номер, и он должен совпадать с номером, введённым на сайте.",
+            variant: "destructive",
+          });
         } else if (data?.status === "expired") {
           setPhoneStep("enter");
           toast({ title: "Ссылка устарела. Попробуйте снова.", variant: "destructive" });
