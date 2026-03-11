@@ -54,6 +54,7 @@ export default function YandexMap({ listings, className = "" }: YandexMapProps) 
           center: [55.75, 37.62],
           zoom: 4,
           controls: ["zoomControl", "geolocationControl"],
+          restrictMapArea: [[41.0, 19.0], [82.0, 180.0]],
         });
 
         mapInstanceRef.current = map;
