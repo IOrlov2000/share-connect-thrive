@@ -117,16 +117,16 @@ export default function HomePage() {
   };
 
   return (
-    <div className="container py-6 space-y-8">
+    <div className="container px-4 py-6 space-y-8">
       {/* Hero */}
       <section
-        className="relative text-center space-y-4 py-16 animate-fade-in rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent"
+        className="relative text-center space-y-4 py-10 sm:py-16 animate-fade-in rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent"
       >
-        <div className="relative z-10 space-y-4">
-        <h1 className="font-display text-4xl font-bold md:text-5xl">
+        <div className="relative z-10 space-y-4 px-4">
+        <h1 className="font-display text-2xl sm:text-4xl md:text-5xl font-bold leading-tight">
           Обменивайся на <span className="text-gradient">Всё на Всё</span>
         </h1>
-        <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+        <p className="text-muted-foreground text-sm sm:text-lg max-w-xl mx-auto">
           Обменивай вещи, находи выгодные предложения или помогай нуждающимся.
         </p>
         <div className="relative max-w-md mx-auto" ref={searchContainerRef}>
