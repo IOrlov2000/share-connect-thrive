@@ -1,0 +1,1 @@
+DELETE FROM rate_limits WHERE key LIKE 'sms:%' OR key LIKE 'ip:%';
