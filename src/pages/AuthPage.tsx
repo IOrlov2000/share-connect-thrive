@@ -220,7 +220,7 @@ export default function AuthPage() {
 
               {authMethod === "telegram" && (
                 <p className="text-xs text-center text-muted-foreground">
-                  Код придёт в Telegram-бот. Нужно нажать на ссылку и открыть бота.
+                  После открытия бота Telegram попросит подтвердить ваш номер. Код придёт только если он совпадает с номером, введённым на сайте.
                 </p>
               )}
             </>
