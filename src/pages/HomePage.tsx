@@ -47,27 +47,32 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: listingsData } = await supabase
-        .from("listings")
-        .select("id, title, images, price, location, is_charity, latitude, longitude, categories(name)")
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(8);
+      try {
+        const [{ data: listingsData }, { data: allListings }] = await Promise.all([
+          supabase
+            .from("listings")
+            .select("id, title, images, price, location, is_charity, latitude, longitude, categories(name)")
+            .eq("status", "active")
+            .order("created_at", { ascending: false })
+            .limit(8),
+          supabase
+            .from("listings")
+            .select("category_id, categories(name), latitude, longitude")
+            .eq("status", "active"),
+        ]);
 
-      if (listingsData) setListings(listingsData as DBListing[]);
+        if (listingsData) setListings(listingsData as DBListing[]);
 
-      const { data: allListings } = await supabase
-        .from("listings")
-        .select("category_id, categories(name), latitude, longitude")
-        .eq("status", "active");
-
-      if (allListings) {
-        const counts: Record<string, number> = {};
-        allListings.forEach((l: any) => {
-          const name = l.categories?.name;
-          if (name) counts[name] = (counts[name] || 0) + 1;
-        });
-        setCategoryCounts(counts);
+        if (allListings) {
+          const counts: Record<string, number> = {};
+          allListings.forEach((l: any) => {
+            const name = l.categories?.name;
+            if (name) counts[name] = (counts[name] || 0) + 1;
+          });
+          setCategoryCounts(counts);
+        }
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
