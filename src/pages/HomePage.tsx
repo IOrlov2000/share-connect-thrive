@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, Laptop, Shirt, Sofa, Bike, BookOpen, Gamepad2, Baby, Wrench, Loader2 } from "lucide-react";
+import { Search, Laptop, Shirt, Sofa, Bike, BookOpen, Gamepad2, Baby, Wrench, Loader2, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import ListingCard from "@/components/ListingCard";
 import CategoryCard from "@/components/CategoryCard";
 import YandexMap from "@/components/YandexMap";
@@ -38,6 +39,7 @@ export default function HomePage() {
   const [searchResults, setSearchResults] = useState<DBListing[]>([]);
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [mapExpanded, setMapExpanded] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
@@ -174,6 +176,44 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Map - right after hero */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-xl font-semibold flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-primary" />
+            Объявления на карте
+          </h2>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            onClick={() => setMapExpanded(!mapExpanded)}
+          >
+            {mapExpanded ? (
+              <>Свернуть <ChevronUp className="ml-1 h-4 w-4" /></>
+            ) : (
+              <>Открыть карту <ChevronDown className="ml-1 h-4 w-4" /></>
+            )}
+          </Button>
+        </div>
+        <div className={`transition-all duration-300 overflow-hidden ${mapExpanded ? "max-h-[600px]" : "max-h-[200px]"}`}>
+          <YandexMap
+            listings={listings
+              .filter((l) => l.latitude && l.longitude)
+              .map((l) => ({
+                id: l.id,
+                title: l.title,
+                latitude: l.latitude!,
+                longitude: l.longitude!,
+                price: l.price,
+                is_charity: l.is_charity || false,
+                image: l.images?.[0],
+              }))}
+            className={mapExpanded ? "!h-[580px]" : "!h-[200px]"}
+          />
+        </div>
+      </section>
+
       {/* Categories */}
       <section className="space-y-4">
         <h2 className="font-display text-xl font-semibold">Категории</h2>
@@ -188,24 +228,6 @@ export default function HomePage() {
             />
           ))}
         </div>
-      </section>
-
-      {/* Map */}
-      <section className="space-y-4">
-        <h2 className="font-display text-xl font-semibold">Объявления на карте</h2>
-        <YandexMap
-          listings={listings
-            .filter((l) => l.latitude && l.longitude)
-            .map((l) => ({
-              id: l.id,
-              title: l.title,
-              latitude: l.latitude!,
-              longitude: l.longitude!,
-              price: l.price,
-              is_charity: l.is_charity || false,
-              image: l.images?.[0],
-            }))}
-        />
       </section>
 
       {/* Listings from DB */}
