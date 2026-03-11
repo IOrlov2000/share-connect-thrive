@@ -180,6 +180,7 @@ export default function HomePage() {
             </div>
           )}
         </div>
+        </div>
       </section>
 
       {/* Map - right after hero */}

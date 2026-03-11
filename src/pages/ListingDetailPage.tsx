@@ -194,7 +194,8 @@ export default function ListingDetailPage() {
                 title="listing-map"
                 width="100%"
                 height="250"
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${listing.longitude - 0.02},${listing.latitude - 0.02},${listing.longitude + 0.02},${listing.latitude + 0.02}&layer=mapnik&marker=${listing.latitude},${listing.longitude}`}
+                src={`https://yandex.ru/map-widget/v1/?ll=${listing.longitude},${listing.latitude}&z=14&pt=${listing.longitude},${listing.latitude},pm2rdm`}
+                style={{ border: 0 }}
               />
             </div>
           </div>
