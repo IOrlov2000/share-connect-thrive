@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import ExchangeModal from "@/components/ExchangeModal";
 
 interface ListingDetail {
   id: string;
