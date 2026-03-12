@@ -2,8 +2,11 @@ import { ReactNode } from "react";
 import BottomNav from "./BottomNav";
 import DesktopNav from "./DesktopNav";
 import Footer from "./Footer";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
+  usePushNotifications();
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <DesktopNav />
