@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -15,7 +16,6 @@ interface ListingsMapProps {
   className?: string;
 }
 
-// Fix default marker icons for leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -26,11 +26,14 @@ L.Icon.Default.mergeOptions({
 export default function ListingsMap({ listings, className = "" }: ListingsMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const navigate = useNavigate();
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    const map = L.map(mapRef.current).setView([55.7558, 37.6173], 5); // Moscow center default
+    const map = L.map(mapRef.current).setView([55.7558, 37.6173], 5);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
@@ -47,7 +50,6 @@ export default function ListingsMap({ listings, className = "" }: ListingsMapPro
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // Clear existing markers
     map.eachLayer((layer) => {
       if (layer instanceof L.Marker) map.removeLayer(layer);
     });
@@ -58,8 +60,19 @@ export default function ListingsMap({ listings, className = "" }: ListingsMapPro
       if (listing.latitude && listing.longitude) {
         const marker = L.marker([listing.latitude, listing.longitude]).addTo(map);
         marker.bindPopup(
-          `<strong>${listing.title}</strong><br/>${listing.price ? listing.price + " ₽" : "Бесплатно"}`
+          `<strong>${listing.title}</strong><br/>${listing.price ? listing.price + " ₽" : "Бесплатно"}<br/><a href="/listing/${listing.id}" class="leaflet-listing-link" style="color:#f97316;text-decoration:underline;cursor:pointer">Открыть →</a>`
         );
+        marker.on("popupopen", () => {
+          setTimeout(() => {
+            document.querySelectorAll(".leaflet-listing-link").forEach((el) => {
+              el.addEventListener("click", (e) => {
+                e.preventDefault();
+                const href = (e.currentTarget as HTMLAnchorElement).getAttribute("href");
+                if (href) navigateRef.current(href);
+              });
+            });
+          }, 50);
+        });
         bounds.push([listing.latitude, listing.longitude]);
       }
     });
