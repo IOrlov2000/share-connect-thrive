@@ -16,7 +16,7 @@ export default function BottomNav() {
   const unreadCount = useUnreadMessages();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       <div className="flex items-center justify-around py-2">
         {navItems.map(({ to, icon: Icon, label }) => {
           const active = location.pathname === to;
@@ -30,7 +30,7 @@ export default function BottomNav() {
               }`}
             >
               <Icon className="h-5 w-5" />
-              <span>{label}</span>
+              <span className="text-[11px] leading-tight">{label}</span>
               {isMessages && unreadCount > 0 && (
                 <span className="absolute -top-1 right-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
                   {unreadCount > 99 ? "99+" : unreadCount}
