@@ -30,7 +30,7 @@ export default function BottomNav() {
               }`}
             >
               <Icon className="h-5 w-5" />
-              <span className="text-[11px] leading-tight">{label}</span>
+              <span className="text-[10px] leading-tight truncate max-w-[3.5rem]">{label}</span>
               {isMessages && unreadCount > 0 && (
                 <span className="absolute -top-1 right-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
                   {unreadCount > 99 ? "99+" : unreadCount}
