@@ -9,6 +9,8 @@ interface MapListing {
   latitude: number;
   longitude: number;
   price: number | null;
+  is_charity?: boolean;
+  image?: string;
 }
 
 interface ListingsMapProps {
