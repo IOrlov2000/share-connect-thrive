@@ -9,6 +9,8 @@ interface MapListing {
   latitude: number;
   longitude: number;
   price: number | null;
+  is_charity?: boolean;
+  image?: string;
 }
 
 interface ListingsMapProps {
@@ -59,8 +61,18 @@ export default function ListingsMap({ listings, className = "" }: ListingsMapPro
     listings.forEach((listing) => {
       if (listing.latitude && listing.longitude) {
         const marker = L.marker([listing.latitude, listing.longitude]).addTo(map);
+        const imgSrc = listing.image || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=120&h=120&fit=crop";
+        const priceText = listing.is_charity ? "Бесплатно" : listing.price ? listing.price.toLocaleString() + " ₽" : "Договорная";
         marker.bindPopup(
-          `<strong>${listing.title}</strong><br/>${listing.price ? listing.price + " ₽" : "Бесплатно"}<br/><a href="/listing/${listing.id}" class="leaflet-listing-link" style="color:#f97316;text-decoration:underline;cursor:pointer">Открыть →</a>`
+          `<div style="display:flex;gap:8px;min-width:200px">
+            <img src="${imgSrc}" alt="" style="width:70px;height:70px;object-fit:cover;border-radius:8px;flex-shrink:0"/>
+            <div style="display:flex;flex-direction:column;justify-content:center;gap:3px">
+              <strong style="font-size:13px">${listing.title}</strong>
+              <span style="color:#f97316;font-weight:600;font-size:13px">${priceText}</span>
+              <a href="/listing/${listing.id}" class="leaflet-listing-link" style="color:#f97316;text-decoration:underline;font-size:12px">Открыть →</a>
+            </div>
+          </div>`,
+          { minWidth: 220 }
         );
         marker.on("popupopen", () => {
           setTimeout(() => {

@@ -69,11 +69,19 @@ export default function YandexMap({ listings, className = "" }: YandexMapProps) 
           .filter((l) => l.latitude && l.longitude)
           .map((l) => {
             const priceText = l.is_charity ? "Бесплатно" : l.price ? `${l.price.toLocaleString()} ₽` : "Договорная";
+            const imgSrc = l.image || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=120&h=120&fit=crop";
             const pm = new window.ymaps.Placemark(
               [l.latitude, l.longitude],
               {
-                balloonContentHeader: `<span style="color:#f97316;font-weight:600;cursor:pointer" data-listing-id="${l.id}">${l.title}</span>`,
-                balloonContentBody: `<div style="font-size:14px;padding:4px 0">${priceText}</div><div style="padding-top:4px"><a href="/listing/${l.id}" class="ym-listing-link" style="color:#f97316;font-size:13px;text-decoration:underline;cursor:pointer">Открыть →</a></div>`,
+                balloonContentHeader: `<a href="/listing/${l.id}" class="ym-listing-link" style="color:#f97316;font-weight:600;text-decoration:none;font-size:14px;cursor:pointer">${l.title}</a>`,
+                balloonContentBody: `
+                  <div style="display:flex;gap:10px;padding:6px 0;min-width:220px">
+                    <img src="${imgSrc}" alt="" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0" />
+                    <div style="display:flex;flex-direction:column;justify-content:center;gap:4px">
+                      <div style="font-size:15px;font-weight:600;color:#f97316">${priceText}</div>
+                      <a href="/listing/${l.id}" class="ym-listing-link" style="color:#f97316;font-size:13px;text-decoration:underline;cursor:pointer">Открыть →</a>
+                    </div>
+                  </div>`,
                 hintContent: l.title,
               },
               {
