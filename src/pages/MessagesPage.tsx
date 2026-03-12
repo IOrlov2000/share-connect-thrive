@@ -218,7 +218,7 @@ export default function MessagesPage() {
   return (
     <div className="container py-6 animate-fade-in">
       <h1 className="font-display text-2xl font-bold mb-4">Сообщения</h1>
-      <div className="flex h-[calc(100vh-220px)] md:h-[calc(100vh-160px)] overflow-hidden rounded-xl border bg-card">
+      <div className="flex overflow-hidden rounded-xl border bg-card" style={{ height: 'calc(100vh - 220px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' }}>
         {/* Conversation list */}
         <div className={`w-full border-r md:w-80 ${selectedConvo ? "hidden md:block" : ""}`}>
           <ScrollArea className="h-full">
