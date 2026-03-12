@@ -1,23 +1,52 @@
-import { Heart, Building2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Heart, Building2, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import ListingCard from "@/components/ListingCard";
+import ListingCard, { ListingCardSkeleton } from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
-const charityListings = [
-  { id: "c1", title: "Коллекция детских книг", image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=400&fit=crop", price: "Бесплатно", location: "Екатеринбург", category: "Книги", isCharity: true },
-  { id: "c2", title: "Детская одежда (0-12 мес)", image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=400&h=400&fit=crop", price: "Бесплатно", location: "Москва", category: "Детское", isCharity: true },
-  { id: "c3", title: "Зимние куртки (разные размеры)", image: "https://images.unsplash.com/photo-1544923246-77307dd270cb?w=400&h=400&fit=crop", price: "Бесплатно", location: "Москва", category: "Одежда", isCharity: true },
-  { id: "c4", title: "Офисный стол и стул", image: "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=400&h=400&fit=crop", price: "Бесплатно", location: "Санкт-Петербург", category: "Мебель", isCharity: true },
-];
+interface CharityListing {
+  id: string;
+  title: string;
+  images: string[] | null;
+  price: number | null;
+  location: string | null;
+  is_charity: boolean | null;
+  categories: { name: string } | null;
+}
 
-const foundations = [
-  { name: "Фонд «Помощь рядом»", items: 156, icon: "🤝" },
-  { name: "Фонд «Дети прежде всего»", items: 89, icon: "👶" },
-  { name: "Центр помощи сообществу", items: 234, icon: "🏘️" },
-];
+interface Foundation {
+  id: string;
+  name: string;
+  description: string | null;
+  items_received: number | null;
+  logo_url: string | null;
+}
 
 export default function CharityPage() {
   const navigate = useNavigate();
+  const [listings, setListings] = useState<CharityListing[]>([]);
+  const [foundations, setFoundations] = useState<Foundation[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const [listingsRes, foundationsRes] = await Promise.all([
+        supabase
+          .from("listings")
+          .select("id, title, images, price, location, is_charity, categories(name)")
+          .eq("is_charity", true)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(12),
+        supabase.from("foundations").select("*").order("items_received", { ascending: false }),
+      ]);
+      if (listingsRes.data) setListings(listingsRes.data as CharityListing[]);
+      if (foundationsRes.data) setFoundations(foundationsRes.data);
+      setLoading(false);
+    };
+    fetch();
+  }, []);
 
   const handleDonate = () => {
     navigate("/create?charity=true");
@@ -36,30 +65,58 @@ export default function CharityPage() {
         </Button>
       </section>
 
-      <section className="space-y-4">
-        <h2 className="font-display text-xl font-semibold flex items-center gap-2">
-          <Building2 className="h-5 w-5" /> Фонды-партнёры
-        </h2>
-        <div className="grid gap-3 md:grid-cols-3">
-          {foundations.map((f) => (
-            <div key={f.name} className="flex items-center gap-3 rounded-xl border bg-card p-4 cursor-pointer hover:shadow-md transition-all">
-              <span className="text-3xl">{f.icon}</span>
-              <div>
-                <p className="font-semibold text-sm">{f.name}</p>
-                <p className="text-xs text-muted-foreground">{f.items} вещей получено</p>
+      {foundations.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="font-display text-xl font-semibold flex items-center gap-2">
+            <Building2 className="h-5 w-5" /> Фонды-партнёры
+          </h2>
+          <div className="grid gap-3 md:grid-cols-3">
+            {foundations.map((f) => (
+              <div key={f.id} className="flex items-center gap-3 rounded-xl border bg-card p-4 cursor-pointer hover:shadow-md transition-all">
+                {f.logo_url ? (
+                  <img src={f.logo_url} alt={f.name} className="h-10 w-10 rounded-full object-cover" />
+                ) : (
+                  <span className="text-3xl">🤝</span>
+                )}
+                <div>
+                  <p className="font-semibold text-sm">{f.name}</p>
+                  <p className="text-xs text-muted-foreground">{f.items_received || 0} вещей получено</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="space-y-4">
         <h2 className="font-display text-xl font-semibold">Доступные пожертвования</h2>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {charityListings.map((listing) => (
-            <ListingCard key={listing.id} {...listing} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {[...Array(4)].map((_, i) => <ListingCardSkeleton key={i} />)}
+          </div>
+        ) : listings.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {listings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                id={listing.id}
+                title={listing.title}
+                image={listing.images?.[0] || "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=400&fit=crop"}
+                price="Бесплатно"
+                location={listing.location || "Не указано"}
+                category={(listing.categories as any)?.name || "Другое"}
+                isCharity={true}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="py-12 text-center text-muted-foreground">
+            <p>Пока нет благотворительных объявлений</p>
+            <Button className="mt-4" variant="outline" onClick={handleDonate}>
+              Стать первым — пожертвовать вещь
+            </Button>
+          </div>
+        )}
       </section>
     </div>
   );
