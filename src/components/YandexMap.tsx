@@ -72,14 +72,25 @@ export default function YandexMap({ listings, className = "" }: YandexMapProps) 
             const pm = new window.ymaps.Placemark(
               [l.latitude, l.longitude],
               {
-                balloonContentHeader: `<a href="/listing/${l.id}" style="color:#f97316;font-weight:600;text-decoration:none">${l.title}</a>`,
-                balloonContentBody: `<div style="font-size:14px;padding:4px 0">${priceText}</div>`,
+                balloonContentHeader: `<span style="color:#f97316;font-weight:600;cursor:pointer" data-listing-id="${l.id}">${l.title}</span>`,
+                balloonContentBody: `<div style="font-size:14px;padding:4px 0">${priceText}</div><div style="padding-top:4px"><a href="/listing/${l.id}" class="ym-listing-link" style="color:#f97316;font-size:13px;text-decoration:underline;cursor:pointer">Открыть →</a></div>`,
                 hintContent: l.title,
               },
               {
                 preset: "islands#orangeDotIcon",
               }
             );
+            pm.events.add('balloonopen', () => {
+              setTimeout(() => {
+                document.querySelectorAll('.ym-listing-link').forEach((el) => {
+                  el.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const href = (e.currentTarget as HTMLAnchorElement).getAttribute('href');
+                    if (href && navigateRef.current) navigateRef.current(href);
+                  });
+                });
+              }, 100);
+            });
             return pm;
           });
 
