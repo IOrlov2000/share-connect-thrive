@@ -70,7 +70,7 @@ export default function BrowsePage() {
 
   const mapListings = filtered
     .filter((l) => l.latitude && l.longitude)
-    .map((l) => ({ id: l.id, title: l.title, latitude: l.latitude!, longitude: l.longitude!, price: l.price }));
+    .map((l) => ({ id: l.id, title: l.title, latitude: l.latitude!, longitude: l.longitude!, price: l.price, is_charity: l.is_charity || false, image: l.images?.[0] }));
 
   return (
     <div className="container py-6 space-y-6 animate-fade-in">
