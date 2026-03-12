@@ -90,6 +90,8 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
@@ -104,10 +106,17 @@ body {
   /* Bottom padding handled by BottomNav component */
 }
 
-/* Prevent iOS overscroll bounce */
+/* Smooth scrolling & performance */
 html {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* GPU-accelerated scroll containers */
+.container, main {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* Fix iOS input zoom */
@@ -117,15 +126,41 @@ html {
   }
 }
 
+/* Hide scrollbar but keep scrollable */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Shimmer loading effect */
+.shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted-foreground) / 0.08) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-slide 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer-slide {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 @layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
     background-size: 200% auto;
-    animation: shimmer 3s ease-in-out infinite;
+    animation: shimmer-text 3s ease-in-out infinite;
   }
 }
 
-@keyframes shimmer {
+@keyframes shimmer-text {
   0%, 100% { background-position: 0% center; }
   50% { background-position: 100% center; }
 }

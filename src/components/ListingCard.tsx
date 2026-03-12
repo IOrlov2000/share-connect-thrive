@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { MapPin } from "lucide-react";
 
@@ -12,24 +12,67 @@ interface ListingCardProps {
   isCharity?: boolean;
 }
 
-export default function ListingCard({ id, title, image, price, location, category, isCharity }: ListingCardProps) {
-  const [imgLoaded, setImgLoaded] = useState(false);
+function OptimizedImage({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const [inView, setInView] = useState(false);
+  const imgRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = imgRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Generate thumbnail URL for Supabase storage images
+  const thumbSrc = src.includes("supabase") 
+    ? `${src}?width=400&quality=60` 
+    : src;
 
   return (
-    <Link to={`/listing/${id}`} className="group animate-fade-in cursor-pointer overflow-hidden rounded-xl border bg-card transition-all hover:shadow-lg hover:-translate-y-1 block">
-      <div className="relative aspect-square overflow-hidden bg-muted">
-        {!imgLoaded && (
-          <div className="absolute inset-0 animate-pulse bg-muted" />
-        )}
+    <div ref={imgRef} className="absolute inset-0">
+      {/* Shimmer placeholder */}
+      <div
+        className={`absolute inset-0 bg-muted transition-opacity duration-500 ${
+          loaded ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <div className="absolute inset-0 shimmer-effect" />
+      </div>
+      {inView && (
         <img
-          src={image}
-          alt={title}
-          className={`h-full w-full object-cover transition-all duration-300 group-hover:scale-105 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
-          loading="lazy"
+          src={thumbSrc}
+          alt={alt}
+          className={`h-full w-full object-cover transition-opacity duration-500 ease-out ${
+            loaded ? "opacity-100" : "opacity-0"
+          }`}
           decoding="async"
-          onLoad={() => setImgLoaded(true)}
+          onLoad={() => setLoaded(true)}
         />
-        <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-1">
+      )}
+    </div>
+  );
+}
+
+export default function ListingCard({ id, title, image, price, location, category, isCharity }: ListingCardProps) {
+  return (
+    <Link
+      to={`/listing/${id}`}
+      className="group block overflow-hidden rounded-xl border bg-card transition-shadow duration-300 hover:shadow-lg active:scale-[0.98] will-change-transform"
+    >
+      <div className="relative aspect-square overflow-hidden">
+        <OptimizedImage src={image} alt={title} />
+        <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-1 pointer-events-none">
           {isCharity ? (
             <span className="rounded-full bg-charity px-2 py-0.5 text-[10px] sm:text-xs font-medium text-charity-foreground shrink-0 max-w-[55%] truncate">
               Благотворительность
@@ -57,11 +100,13 @@ export default function ListingCard({ id, title, image, price, location, categor
 export function ListingCardSkeleton() {
   return (
     <div className="overflow-hidden rounded-xl border bg-card">
-      <div className="aspect-square bg-muted animate-pulse" />
+      <div className="aspect-square bg-muted">
+        <div className="h-full w-full shimmer-effect" />
+      </div>
       <div className="p-3 space-y-2">
-        <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
-        <div className="h-5 w-1/2 bg-muted animate-pulse rounded" />
-        <div className="h-3 w-2/3 bg-muted animate-pulse rounded" />
+        <div className="h-4 w-3/4 bg-muted rounded shimmer-effect" />
+        <div className="h-5 w-1/2 bg-muted rounded shimmer-effect" />
+        <div className="h-3 w-2/3 bg-muted rounded shimmer-effect" />
       </div>
     </div>
   );
