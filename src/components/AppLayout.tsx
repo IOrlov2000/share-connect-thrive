@@ -3,10 +3,12 @@ import BottomNav from "./BottomNav";
 import DesktopNav from "./DesktopNav";
 import Footer from "./Footer";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { usePresence } from "@/hooks/usePresence";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   usePushNotifications();
+  usePresence();
   const isMobile = useIsMobile();
 
   return (
