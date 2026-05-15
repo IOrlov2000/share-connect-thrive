@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { MapPin, Star, ArrowLeft, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
+import { usePresence } from "@/hooks/usePresence";
 
 interface UserProfile {
   display_name: string | null;
@@ -26,6 +27,7 @@ export default function UserProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const { isOnline } = usePresence(userId);
 
   useEffect(() => {
     if (!userId) return;
@@ -69,11 +71,20 @@ export default function UserProfilePage() {
       </Link>
 
       <div className="flex items-center gap-4">
-        <Avatar className="h-20 w-20">
-          <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-display font-bold">{initials}</AvatarFallback>
-        </Avatar>
+        <div className="relative">
+          <Avatar className="h-20 w-20">
+            <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-display font-bold">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="absolute -bottom-0.5 -right-0.5 rounded-full bg-card p-1 shadow" title={isOnline ? "В сети" : "Не в сети"}>
+            <div className={`h-3 w-3 rounded-full ${isOnline ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/40"}`} />
+          </div>
+        </div>
         <div className="flex-1">
           <h1 className="font-display text-xl font-bold">{profile.display_name || "Пользователь"}</h1>
+          <span className={`mt-0.5 inline-flex items-center gap-1 text-xs font-medium ${isOnline ? "text-emerald-600" : "text-muted-foreground"}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? "bg-emerald-500" : "bg-muted-foreground/50"}`} />
+            {isOnline ? "В сети" : "Не в сети"}
+          </span>
           {profile.location && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="h-3.5 w-3.5" /> {profile.location}
