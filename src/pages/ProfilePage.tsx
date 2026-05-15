@@ -1,10 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Settings, MapPin, Star, Heart, FileText, ArrowRightLeft, ClipboardList, Headphones, LogOut, Trash2, ChevronRight } from "lucide-react";
+import { Settings, MapPin, Star, Heart, FileText, ArrowRightLeft, ClipboardList, Headphones, LogOut, Trash2, ChevronRight, Camera, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { usePresence } from "@/hooks/usePresence";
 
 const primaryItems = [
   { to: "/profile/listings", icon: FileText, label: "Мои объявления", tone: "primary" as const },
@@ -37,6 +38,9 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listingsCount, setListingsCount] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const { isOnline } = usePresence(user?.id);
 
   useEffect(() => {
     if (!user) return;
@@ -52,6 +56,32 @@ export default function ProfilePage() {
     await signOut();
     navigate("/");
     toast({ title: "Вы вышли из аккаунта" });
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Файл слишком большой (макс. 2 МБ)", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/avatar.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true });
+    if (uploadError) {
+      toast({ title: "Ошибка загрузки", variant: "destructive" });
+      setUploading(false);
+      return;
+    }
+    const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+    const avatarUrl = `${publicUrl}?t=${Date.now()}`;
+    await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("user_id", user.id);
+    setProfile((prev) => prev ? { ...prev, avatar_url: avatarUrl } : prev);
+    setUploading(false);
+    toast({ title: "Фото обновлено ✅" });
   };
 
   const initials = profile?.display_name
@@ -75,8 +105,24 @@ export default function ProfilePage() {
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="absolute -bottom-2 -right-2 rounded-full bg-card p-1.5 shadow-lg">
-                <div className="h-3 w-3 rounded-full border-2 border-card bg-emerald-500" />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                aria-label="Сменить фото"
+                className="absolute -bottom-1 -right-1 rounded-full bg-primary p-2 text-primary-foreground shadow-lg ring-2 ring-card transition-transform hover:scale-110 active:scale-95 disabled:opacity-50"
+              >
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+              <div className="absolute -top-1 -right-1 rounded-full bg-card p-1 shadow-lg" title={isOnline ? "В сети" : "Не в сети"}>
+                <div className={`h-3 w-3 rounded-full border-2 border-card ${isOnline ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/40"}`} />
               </div>
             </div>
 
@@ -84,12 +130,18 @@ export default function ProfilePage() {
               <h1 className="mt-4 font-display text-2xl font-bold tracking-tight text-white md:mt-0 md:text-4xl">
                 {profile?.display_name || user?.email || "Пользователь"}
               </h1>
-              <div className="mt-2 flex items-center gap-1.5 rounded-full border border-white/20 bg-white/15 px-3 py-1 backdrop-blur-md">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold text-white backdrop-blur-md ${isOnline ? "border-emerald-300/50 bg-emerald-500/30" : "border-white/20 bg-white/15"}`}>
+                  <span className={`h-2 w-2 rounded-full ${isOnline ? "bg-emerald-300 animate-pulse" : "bg-white/60"}`} />
+                  {isOnline ? "В сети" : "Не в сети"}
+                </span>
+                <div className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/15 px-3 py-1 backdrop-blur-md">
                 <Star className="h-3.5 w-3.5 fill-yellow-300 text-yellow-300" />
                 <span className="text-xs font-semibold text-white">
                   {Number(profile?.rating || 0).toFixed(1)}
                   {profile?.location ? <> • <MapPin className="-mt-0.5 inline h-3 w-3" /> {profile.location}</> : null}
                 </span>
+                </div>
               </div>
             </div>
           </div>
